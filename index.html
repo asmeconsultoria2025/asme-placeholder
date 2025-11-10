@@ -34,7 +34,8 @@
     }
     .wrap{position:relative;width:min(1050px,94vw);padding:40px 20px;text-align:center;z-index:1}
     .logo{
-      width:min(560px,80vw);
+      width:min(600px,85vw);
+      height:auto;
       margin:0 auto 22px auto;
       display:block;
       filter:drop-shadow(0 10px 30px rgba(0,0,0,.45));
@@ -44,7 +45,7 @@
     .line{
       fill:none;
       stroke:var(--asme);
-      stroke-width:2.5;
+      stroke-width:3;
       vector-effect:non-scaling-stroke;
       stroke-linecap:round;
       stroke-linejoin:round;
@@ -53,7 +54,7 @@
       animation:draw 2.8s ease-out forwards;
     }
     .line:nth-of-type(1){animation-delay:0.2s;}
-    .line:nth-of-type(2){animation-delay:3.2s;} /* starts right after the first ends */
+    .line:nth-of-type(2){animation-delay:3.2s;}
     @keyframes draw { to { stroke-dashoffset: 0; } }
 
     h1{font-size:clamp(28px,4.2vw,54px);margin:10px 0 8px;font-weight:800;letter-spacing:-.02em}
@@ -74,7 +75,13 @@
   <div class="grid"></div>
 
   <main class="wrap">
-    <svg class="logo" viewBox="0 0 500 200" role="img" aria-labelledby="title desc">
+    <svg
+      class="logo"
+      viewBox="0 0 1000 500"  <!-- ✅ enlarged viewBox prevents cropping -->
+      preserveAspectRatio="xMidYMid meet"  <!-- ✅ keeps centered and scaled -->
+      role="img"
+      aria-labelledby="title desc"
+    >
       <title id="title">ASME Consultoría</title>
       <desc id="desc">Logotipo en trazo</desc>
 
