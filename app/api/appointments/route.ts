@@ -1,10 +1,17 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+// Create Supabase client with fallback handling
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error("Missing Supabase environment variables");
+  }
+
+  return createClient(supabaseUrl, supabaseKey);
+}
 
 const ASME_SERVICES = [
   "Protección Civil",
@@ -17,7 +24,6 @@ const ABOGADOS_SERVICES = [
   "Litigio Penal",
   "Litigio Civil",
   "Amparos",
-  
 ];
 
 // -----------------------------------------------------
@@ -25,6 +31,7 @@ const ABOGADOS_SERVICES = [
 // -----------------------------------------------------
 export async function POST(req: Request) {
   try {
+    const supabase = getSupabaseClient();
     const payload = await req.json();
     const { source, service_label } = payload;
 
@@ -56,7 +63,8 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    const message = err instanceof Error ? err.message : "Server error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -65,6 +73,7 @@ export async function POST(req: Request) {
 // -----------------------------------------------------
 export async function GET(req: Request) {
   try {
+    const supabase = getSupabaseClient();
     const { searchParams } = new URL(req.url);
 
     if (searchParams.get("all") === "true") {
@@ -117,6 +126,7 @@ export async function GET(req: Request) {
       limit,
     });
   } catch (err) {
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    const message = err instanceof Error ? err.message : "Server error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
