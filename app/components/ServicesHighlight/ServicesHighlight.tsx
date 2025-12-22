@@ -8,25 +8,25 @@ export async function ServicesHighlight() {
   const capacitacionImages = await fetchServiceImages('formacion-de-brigadas');
   const legalImages = await fetchServiceImages('asesoria-y-defensa-legal');
 
-  // Fallbacks
+  // Fallbacks - FIXED: removed /public/ prefix
   const defaultConsultoria = [
-    "/public/images/CARD1_IMAGE1.jpeg",
-    "/public/images/CARD1_IMAGE2.jpeg",
-    "/public/images/CARD1_IMAGE3.jpeg", 
-    "/public/images/CARD1_IMAGE4.jpeg",
+    "/images/CARD1_IMAGE1.jpeg",
+    "/images/CARD1_IMAGE2.jpeg",
+    "/images/CARD1_IMAGE3.jpeg", 
+    "/images/CARD1_IMAGE4.jpeg",
   ];
 
   const defaultCapacitacion = [
-    "/public/images/servicios/capacitacion1.jpeg",  
-    "/public/images/servicios/capacitacion3.jpeg",
-    "/public/images/capacitacion4.jpeg", 
-    "/public/images/capacitacion2.jpeg",
+    "/images/servicios/capacitacion1.jpeg",  
+    "/images/servicios/capacitacion3.jpeg",
+    "/images/capacitacion4.jpeg", 
+    "/images/capacitacion2.jpeg",
   ];
 
   const defaultLegal = [
-    "/public/images/CARD3_IMAGE_1.png",
-    "/public/images/CARD3_IMAGE_2.jpeg",
-    "/public/images/abogados/about2.jpeg",
+    "/images/CARD3_IMAGE_1.png",
+    "/images/CARD3_IMAGE_2.jpeg",
+    "/images/abogados/about2.jpeg",
   ];
 
   const serviceImages = {
