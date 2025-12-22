@@ -70,7 +70,7 @@ export function LegalFAB() {
         </TooltipTrigger>
 
         <TooltipContent side="top">
-          <p>Ir a la Página Legal</p>
+          <p className="text-white">Ir a la Página Legal</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
