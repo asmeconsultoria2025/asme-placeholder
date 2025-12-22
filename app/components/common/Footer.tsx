@@ -8,6 +8,7 @@ import { Facebook, Instagram } from 'lucide-react';
 import { createBrowserClient } from '@supabase/ssr';
 import { useEffect, useState } from 'react';
 
+
 function ThreadsIcon({ className }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
@@ -119,7 +120,13 @@ export function Footer() {
         </div>
 
         <div className="mt-10 pt-4 text-center text-sm text-gray-400">
-          <p>&copy; {currentYear} ASME. Todos los derechos reservados.</p>
+          <p>
+  &copy; {currentYear} ASME. Todos los derechos reservados | Designed by{' '}
+  <Link href="https://codevostudios.com" target="_blank" rel="noopener noreferrer" className="hover:underline">
+    CodevoStudios
+  </Link>
+  .
+</p>
         </div>
       </div>
     </footer>
