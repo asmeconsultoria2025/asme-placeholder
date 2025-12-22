@@ -122,8 +122,8 @@ export function Footer() {
         <div className="mt-10 pt-4 text-center text-sm text-gray-400">
           <p>
   &copy; {currentYear} ASME. Todos los derechos reservados | Designed by{' '}
-  <Link href="https://codevostudios.com" target="_blank" rel="noopener noreferrer" className="hover:underline">
-    CodevoStudios
+  <Link href="https://codevostudio.com" target="_blank" rel="noopener noreferrer" className="hover:underline">
+    CodevoStudio
   </Link>
   .
 </p>
