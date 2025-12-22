@@ -214,7 +214,7 @@ export default function LegalHomePage() {
                  
                 >
                   <Image
-                    src="/images/CARD3_IMAGE_2.JPEG"
+                    src="/images/CARD3_IMAGE_2.jpeg"
                     alt="Nuestras Victorias"
                     fill
                     className="object-cover opacity-05"
