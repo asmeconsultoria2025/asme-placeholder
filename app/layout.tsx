@@ -5,6 +5,8 @@ import { cn } from '@/app/lib/utils';
 import { Navbar } from '@/app/components/common/Navbar';
 import { LayoutClientWrapper } from '@/app/components/common/LayoutClientWrapper';
 import { SEOSchemaMarkupMainASME } from '@/app/components/SEOSchemaMarkup-MainASME'
+import { SpeedInsights } from "@vercel/speed-insights/next"
+import { Analytics } from "@vercel/analytics/next"
 
 const businessName = 'ASME';
 const businessPhone = '+52 664 201 6011';
@@ -285,6 +287,8 @@ export default function RootLayout({
         <Navbar />
         {/* ✅ Client-side logic wrapper controls what renders below */}
         <LayoutClientWrapper>{children}</LayoutClientWrapper>
+        <SpeedInsights/>
+        <Analytics/>
       </body>
     </html>
   );
