@@ -8,7 +8,14 @@ import { createBrowserClient } from '@supabase/ssr';
 type GalleryImage = {
   name: string;
   publicUrl: string;
+  category: string;
 };
+
+const CATEGORIES = [
+  { id: 'capacitaciones', label: 'Capacitaciones' },
+  { id: 'abogados', label: 'Abogados' },
+  { id: 'otros', label: 'Otros' },
+];
 
 export default function GaleriaPage() {
   const supabase = createBrowserClient(
@@ -18,31 +25,46 @@ export default function GaleriaPage() {
 
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   useEffect(() => {
     const loadImages = async () => {
-      const { data, error } = await supabase.storage
-        .from('gallery')
-        .list('', { limit: 200, sortBy: { column: 'created_at', order: 'desc' } });
+      const allImages: GalleryImage[] = [];
 
-      if (!error && data) {
-        const mapped = data
-          .filter((f) => f.name && !f.name.startsWith('.'))
-          .map((file) => ({
-            name: file.name,
-            publicUrl: supabase.storage
-              .from('gallery')
-              .getPublicUrl(file.name).data.publicUrl,
-          }));
+      // Load images from each category folder
+      for (const category of CATEGORIES) {
+        const { data, error } = await supabase.storage
+          .from('gallery')
+          .list(category.id, { 
+            limit: 200, 
+            sortBy: { column: 'created_at', order: 'desc' } 
+          });
 
-        setImages(mapped);
+        if (!error && data) {
+          const mapped = data
+            .filter((f) => f.name && !f.name.startsWith('.'))
+            .map((file) => ({
+              name: file.name,
+              publicUrl: supabase.storage
+                .from('gallery')
+                .getPublicUrl(`${category.id}/${file.name}`).data.publicUrl,
+              category: category.id,
+            }));
+
+          allImages.push(...mapped);
+        }
       }
 
+      setImages(allImages);
       setLoading(false);
     };
 
     loadImages();
   }, []);
+
+  const filteredImages = selectedCategory === 'all'
+    ? images
+    : images.filter(img => img.category === selectedCategory);
 
   return (
     <section className="min-h-screen bg-gradient-to-b from-gray-950 via-black to-gray-950 px-4 py-24 sm:px-8 md:px-20">
@@ -62,20 +84,56 @@ export default function GaleriaPage() {
         </p>
       </motion.div>
 
+      {/* Category Filter */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+        className="mx-auto mb-12 max-w-4xl"
+      >
+        <div className="flex flex-wrap justify-center gap-3">
+          <button
+            onClick={() => setSelectedCategory('all')}
+            className={`px-6 py-2.5 rounded-full font-semibold transition-all ${
+              selectedCategory === 'all'
+                ? 'bg-red-600 text-white shadow-lg shadow-red-600/50'
+                : 'bg-gray-900 text-gray-400 hover:bg-gray-800 border border-gray-800'
+            }`}
+          >
+            Todas
+          </button>
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setSelectedCategory(cat.id)}
+              className={`px-6 py-2.5 rounded-full font-semibold transition-all ${
+                selectedCategory === cat.id
+                  ? 'bg-red-600 text-white shadow-lg shadow-red-600/50'
+                  : 'bg-gray-900 text-gray-400 hover:bg-gray-800 border border-gray-800'
+              }`}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
+      </motion.div>
+
       {loading && (
         <p className="text-center text-gray-500">Cargando imágenes…</p>
       )}
 
-      {!loading && images.length === 0 && (
+      {!loading && filteredImages.length === 0 && (
         <p className="text-center text-gray-500">
-          No hay imágenes publicadas aún.
+          {selectedCategory === 'all'
+            ? 'No hay imágenes publicadas aún.'
+            : 'No hay imágenes en esta categoría.'}
         </p>
       )}
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {images.map((img, i) => (
+        {filteredImages.map((img, i) => (
           <motion.div
-            key={img.name}
+            key={`${img.category}-${img.name}`}
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -85,7 +143,7 @@ export default function GaleriaPage() {
             <div className="relative aspect-[4/3] w-full">
               <Image
                 src={img.publicUrl}
-                alt="Imagen de galería"
+                alt={`Imagen de ${CATEGORIES.find(c => c.id === img.category)?.label || img.category}`}
                 fill
                 className="object-cover transition-transform duration-700 group-hover:scale-110"
               />
