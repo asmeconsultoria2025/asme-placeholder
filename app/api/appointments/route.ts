@@ -1,17 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-// Create Supabase client with fallback handling
-function getSupabaseClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseKey) {
-    throw new Error("Missing Supabase environment variables");
-  }
-
-  return createClient(supabaseUrl, supabaseKey);
-}
+export const dynamic = 'force-dynamic';
 
 const ASME_SERVICES = [
   "Protección Civil",
@@ -31,7 +21,11 @@ const ABOGADOS_SERVICES = [
 // -----------------------------------------------------
 export async function POST(req: Request) {
   try {
-    const supabase = getSupabaseClient();
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+
     const payload = await req.json();
     const { source, service_label } = payload;
 
@@ -73,7 +67,11 @@ export async function POST(req: Request) {
 // -----------------------------------------------------
 export async function GET(req: Request) {
   try {
-    const supabase = getSupabaseClient();
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+
     const { searchParams } = new URL(req.url);
 
     if (searchParams.get("all") === "true") {
