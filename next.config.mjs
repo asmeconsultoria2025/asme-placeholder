@@ -19,9 +19,6 @@ const nextConfig = {
   },
 
   experimental: {
-    turbo: {
-      resolveAlias: {},
-    },
     useCache: false,
   },
 };
