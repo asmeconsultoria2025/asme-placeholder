@@ -26,7 +26,7 @@ export async function ServicesHighlight() {
   const defaultLegal = [
     "/images/CARD3_IMAGE_1.png",
     "/images/CARD3_IMAGE_2.jpeg",
-    "/images/abogados/about2.jpeg",
+    "/images/about2.jpeg",
   ];
 
   const serviceImages = {
