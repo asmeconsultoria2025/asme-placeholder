@@ -1,0 +1,72 @@
+# Node / Next.js
+node_modules/
+.next/
+out/
+dist/
+build/
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editors/IDEs
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Locks
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# TypeScript
+*.tsbuildinfo
+
+# Misc caches
+.cache/
+.cache-loader/
+.turbopack/
+.vscode-test/
+
+# Static uploads / runtime files
+/public/uploads/
+/public/.cache/
+/uploads/
+/tmp/
+*.local
+
+# Vercel / Platform config
+.vercel/
+.vercel_build_output/
+
+# Docker
+docker-compose.override.yml
+.docker/
+
+# Supabase (local)
+supabase/.temp/
+supabase/.cache/
+
+# Optional: IDE config and secrets
+secrets.env
+.env.secret
+
+# Keep README / package.json tracked
