@@ -1,106 +1,23 @@
-# robots.txt - Place in public/ folder
-# Comprehensive robots file for ASME main site + legal subdomain
-
-# ============================================================
-# DEFAULT RULES FOR ALL BOTS
-# ============================================================
 User-agent: *
 Allow: /
+
 Disallow: /admin
-Disallow: /.next
+Disallow: /dashboard
+Disallow: /login
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /api
 Disallow: /private
-Disallow: /api
-Disallow: /api/*
-Disallow: /_next
-Disallow: /node_modules
 
-# ============================================================
-# GOOGLE BOT SPECIFIC
-# ============================================================
-User-agent: Googlebot
-Allow: /
-Disallow: /admin
-Disallow: /api
-Crawl-delay: 0
-
-# ============================================================
-# BING BOT SPECIFIC
-# ============================================================
-User-agent: Bingbot
-Allow: /
-Disallow: /admin
-Disallow: /api
-Crawl-delay: 0
-
-# ============================================================
-# BLOCK PROBLEMATIC BOTS
-# ============================================================
-User-agent: MJ12bot
-Disallow: /
-
+# Block aggressive crawlers
 User-agent: AhrefsBot
 Disallow: /
 
 User-agent: SemrushBot
 Disallow: /
 
-User-agent: DotBot
+User-agent: MJ12bot
 Disallow: /
 
-User-agent: MiamiBot
-Disallow: /
-
-User-agent: YandexBot
-Disallow: /
-
-User-agent: BLEXBot
-Disallow: /
-
-# ============================================================
-# ASSET RULES
-# ============================================================
-User-agent: *
-Allow: /*.js
-Allow: /*.css
-Allow: /*.png
-Allow: /*.jpg
-Allow: /*.jpeg
-Allow: /*.gif
-Allow: /*.svg
-Allow: /public/
-Allow: /_next/static/
-
-# ============================================================
-# SITEMAP LOCATIONS
-# ============================================================
-# Main ASME sitemap (includes both main site + /legal pages)
-Sitemap: https://asme.com.mx/sitemap.xml
-
-# Optional: If you want separate sitemaps (create these if needed)
-# Sitemap: https://asme.com.mx/sitemap-main.xml
-# Sitemap: https://asme.com.mx/sitemap-legal.xml
-
-# ============================================================
-# CRAWL DELAY SETTINGS
-# ============================================================
-# Default crawl delay (optional)
-# Crawl-delay: 1
-
-# ============================================================
-# COMMENTS
-# ============================================================
-# This robots.txt covers:
-# 1. Main ASME site (asme.com.mx)
-#    - Capacitación (Training)
-#    - Protección Civil (Safety)
-#    - Servicios Legales (Legal Services)
-# 2. Legal subdomain (/legal)
-#    - Violencia Vicaria
-#    - Litigio Familiar
-#    - Litigio Penal
-#    - Litigio Empresarial
-#    - Trámites y Permisos
-#
-# All public pages are allowed for crawling
-# Admin, API, and private sections are blocked
-# Bad bots are explicitly blocked
+# Sitemap
+Sitemap: https://asmeconsultoria.com/sitemap.xml
