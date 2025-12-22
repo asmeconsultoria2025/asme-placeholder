@@ -15,6 +15,7 @@ type GalleryImage = {
 const CATEGORIES = [
   { id: 'capacitaciones', label: 'Capacitaciones' },
   { id: 'abogados', label: 'Abogados' },
+  { id: 'simulacros', label: 'Simulacros' },
   { id: 'otros', label: 'Otros' },
 ];
 
