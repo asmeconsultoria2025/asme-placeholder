@@ -21,8 +21,8 @@ const businessCity = "Tijuana";
 const businessState = "Baja California";
 const businessCountry = "Mexico";
 const businessEmail = "info@asmeabogados.com";
-const businessURL = "https://asmeabogados.com";
-const businessLogo = "https://asmeabogados.com/white_logo.png";
+const businessURL = "https://asmeconsultoria.com"; // Fixed: Use same domain
+const businessLogo = "https://asmeconsultoria.com/white_logo.png"; // Fixed: Use same domain
 
 export const metadata: Metadata = {
   metadataBase: new URL(businessURL),
@@ -79,7 +79,7 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: businessURL,
+    canonical: `${businessURL}/legal`,
   },
   verification: {
     google: "tcWpunmVnzrDgTdH0Ho5stupxhrGW7CwVlVYvJ7Tg8Q",

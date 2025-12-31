@@ -21,6 +21,21 @@ const nextConfig = {
   experimental: {
     useCache: false,
   },
+
+  // Add headers for better SEO crawling
+  async headers() {
+    return [
+      {
+        source: '/:path((?!dashboard|api|login|admin).*)*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=3600, stale-while-revalidate=86400',
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
