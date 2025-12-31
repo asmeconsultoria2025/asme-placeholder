@@ -22,7 +22,10 @@ export const metadata: Metadata = {
   metadataBase: new URL(businessURL),
   
   // Main homepage
-  title: 'ASME - Capacitación, Protección Civil & Servicios Legales | Tijuana',
+  title: {
+    default: 'ASME - Capacitación, Protección Civil & Servicios Legales | Tijuana',
+    template: '%s | ASME Consultoría',
+  },
   description: 'Soluciones integrales: Capacitación RCP, plan PIPC, protección civil empresarial y servicios legales. Expertos en seguridad industrial y defensa legal en Tijuana, Baja California y México.',
   
   keywords: [
@@ -61,13 +64,17 @@ export const metadata: Metadata = {
     title: 'ASME - Capacitación, Protección Civil & Servicios Legales',
     description: 'Protección integral: Capacitación RCP, PIPC empresarial y servicios legales en Tijuana.',
     images: [`${businessURL}/og-image.jpg`],
-    creator: '@asmeoficial', // Update with your Twitter handle
+    creator: '@asmeoficial',
   },
 
   // Additional meta tags
   authors: [{ name: 'ASME' }],
   creator: 'ASME',
   publisher: 'ASME',
+  applicationName: 'ASME Consultoría',
+  category: 'business',
+  classification: 'Capacitación, Protección Civil y Servicios Legales',
+  
   robots: {
     index: true,
     follow: true,
@@ -84,11 +91,33 @@ export const metadata: Metadata = {
   // Canonical
   alternates: {
     canonical: businessURL,
+    languages: {
+      'es-MX': businessURL,
+      'es': businessURL,
+    },
   },
+
+  // Icons (automatic detection from app directory)
+  icons: {
+    icon: [
+      { url: '/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
+
+  // Manifest is auto-detected from app/manifest.ts
+  manifest: '/manifest.webmanifest',
 
   // Google verification
   verification: {
-    google: 'tcWpunmVnzrDgTdH0Ho5stupxhrGW7CwVlVYvJ7Tg8Q', // Add your code
+    google: 'tcWpunmVnzrDgTdH0Ho5stupxhrGW7CwVlVYvJ7Tg8Q',
+  },
+
+  // Other metadata
+  other: {
+    'google-site-verification': 'tcWpunmVnzrDgTdH0Ho5stupxhrGW7CwVlVYvJ7Tg8Q',
   },
 };
 
