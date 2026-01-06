@@ -176,9 +176,9 @@ export default function AboutUsPage() {
               {[
                 {
                   image: '/images/staff_1.jpeg',
-                  name: 'Lic. Ruben Jimenez',
-                  title: 'Socio Fundador',
-                  description: 'Especialistas en defensa de madres contra violencia vicaria y falsas acusaciones en custodia.',
+                  name: 'Lic. Rubén Moisés Jiménez Gómez',
+                  title: 'Director General del Despacho Juridico ASME Consultoría - Capacitación & Defensa Legal.',
+                  description: 'Lic. En derecho por la UABC, Maestro en derecho civil y familiar, así como Maestro en derecho penal. Abogado litigante con más de 15 años de experiencia en las ramas del derecho civil, familiar, penal y amparo. Especialista en temas de protección civil, derecho ecológico, mala praxis médica y nulidad de multas y actos de autoridad. Cuenta con más de 60 cursos y diplomados en diversos temas por instituciones nacionales e internacionales. Se ha destacado como catedrático de derecho en diversas instituciones, tales como Universidad Humanitas, Academia de policía Estatal, UNIDEP entre otras. Conferencista en temas de violencia de género y violencia contra la mujer y las infancias. Abogado activista en juicios de violencia Vicaria. ',
                 },
                 {
                   image: '/images/staff_2.jpeg',
