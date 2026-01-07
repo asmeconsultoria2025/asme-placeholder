@@ -14,6 +14,7 @@ export default function ResetPasswordPage() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
+
   const router = useRouter();
 
   const [password, setPassword] = useState('');
@@ -25,28 +26,34 @@ export default function ResetPasswordPage() {
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    const { data } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth event:", event);
+    const recover = async () => {
+      const params = new URLSearchParams(window.location.search);
+      const tokenHash = params.get('token_hash') || params.get('token');
 
-      if (event === "PASSWORD_RECOVERY" && session) {
-        setIsValidSession(true);
+      if (!tokenHash) {
+        setError('Invalid or expired session');
+        setIsValidSession(false);
         setIsChecking(false);
+        return;
       }
 
-      if (!session && event !== "PASSWORD_RECOVERY") {
-        setError("Reset link is invalid or expired.");
-        setIsChecking(false);
-      }
-    });
+      const { error } = await supabase.auth.verifyOtp({
+        token_hash: tokenHash,
+        type: 'recovery'
+      });
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) {
+      if (error) {
+        console.error(error);
+        setError('Invalid or expired session');
+        setIsValidSession(false);
+      } else {
         setIsValidSession(true);
       }
+
       setIsChecking(false);
-    });
+    };
 
-    return () => data.subscription.unsubscribe();
+    recover();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -55,7 +62,7 @@ export default function ResetPasswordPage() {
     setError('');
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError('Passwords do not match.');
       setLoading(false);
       return;
     }
@@ -63,8 +70,7 @@ export default function ResetPasswordPage() {
     const { error } = await supabase.auth.updateUser({ password });
 
     if (error) {
-      console.error(error);
-      setError("Password update failed. Token may be expired.");
+      setError('Invalid or expired session');
       setLoading(false);
       return;
     }
@@ -72,42 +78,45 @@ export default function ResetPasswordPage() {
     setSuccess(true);
     setLoading(false);
 
-    setTimeout(() => {
-      router.push('/login');
-    }, 3000);
+    setTimeout(() => router.push('/login'), 3000);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-950 via-black to-gray-950 flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen bg-black flex flex-col items-center justify-center px-4">
       <div className="mb-6 flex flex-col items-center">
         <Logo className="w-56 h-auto mb-2" />
         <p className="text-sm text-white text-center">ASME Admin Portal</p>
       </div>
 
-      <Card className="w-full max-w-md shadow-lg border border-border/60">
+      <Card className="w-full max-w-md border border-border/60">
         <CardHeader>
           <CardTitle className="text-center text-xl text-red-500">Reset Password</CardTitle>
         </CardHeader>
+
         <CardContent>
-          {isChecking ? (
-            <p className="text-white text-center text-sm py-6">Verifying link...</p>
-          ) : success ? (
-            <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 flex items-start gap-3">
+          {isChecking && <p className="text-white text-center py-6">Verifying reset link...</p>}
+
+          {!isChecking && success && (
+            <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 flex gap-3">
               <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5" />
               <div>
                 <p className="text-green-500 font-medium text-sm">Password updated!</p>
                 <p className="text-gray-400 text-sm mt-1">Redirecting to login...</p>
               </div>
             </div>
-          ) : !isValidSession ? (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 flex items-start gap-3">
+          )}
+
+          {!isChecking && !isValidSession && (
+            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 flex gap-3">
               <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />
               <div>
                 <p className="text-red-500 font-medium text-sm">Invalid or expired session</p>
                 <p className="text-gray-400 text-sm mt-1">{error}</p>
               </div>
             </div>
-          ) : (
+          )}
+
+          {!isChecking && isValidSession && !success && (
             <form onSubmit={handleSubmit} className="space-y-4 mt-4">
               <label className="block text-sm text-white">New Password</label>
               <div className="relative">
@@ -135,7 +144,7 @@ export default function ResetPasswordPage() {
 
               {error && <p className="text-red-500 text-center text-sm">{error}</p>}
 
-              <Button type="submit" className="w-full bg-red-500 text-white hover:bg-red-600" disabled={loading}>
+              <Button type="submit" className="w-full bg-red-500 hover:bg-red-600 text-white" disabled={loading}>
                 {loading ? 'Updating...' : 'Update password'}
               </Button>
             </form>
