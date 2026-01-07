@@ -25,78 +25,46 @@ export default function ResetPasswordPage() {
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    const handlePasswordRecovery = async () => {
-      try {
-        // Check if there's a hash fragment (for both access_token and PKCE flows)
-        const hashFragment = window.location.hash;
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth event:", event);
 
-        if (!hashFragment) {
-          setError('No se encontró un token de recuperación. Por favor solicita un nuevo enlace.');
-          setIsChecking(false);
-          return;
-        }
-
-        // Supabase will automatically exchange the PKCE token when we call getSession
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-        if (sessionError) {
-          console.error('Session error:', sessionError);
-          setError('Error al verificar la sesión. Por favor solicita un nuevo enlace.');
-          setIsChecking(false);
-          return;
-        }
-
-        if (session) {
-          // Valid session established - PKCE token was successfully exchanged
-          setIsValidSession(true);
-          setIsChecking(false);
-        } else {
-          // No session means the token is invalid or expired
-          const hashParams = new URLSearchParams(hashFragment.substring(1));
-          const errorDescription = hashParams.get('error_description');
-          const errorCode = hashParams.get('error');
-
-          if (errorDescription || errorCode) {
-            setError(`Error: ${errorDescription || errorCode}`);
-          } else {
-            setError('El enlace de recuperación es inválido o ha expirado. Por favor solicita un nuevo enlace.');
-          }
-          setIsChecking(false);
-        }
-      } catch (err) {
-        console.error('Unexpected error:', err);
-        setError('Ocurrió un error inesperado. Por favor intenta de nuevo.');
+      if (event === "PASSWORD_RECOVERY" && session) {
+        setIsValidSession(true);
         setIsChecking(false);
       }
-    };
 
-    handlePasswordRecovery();
-  }, [supabase.auth]);
+      if (!session && event !== "PASSWORD_RECOVERY") {
+        setError("Reset link is invalid or expired.");
+        setIsChecking(false);
+      }
+    });
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) {
+        setIsValidSession(true);
+      }
+      setIsChecking(false);
+    });
+
+    return () => data.subscription.unsubscribe();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-    // Validate passwords
-    if (password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres.');
-      setLoading(false);
-      return;
-    }
-
     if (password !== confirmPassword) {
-      setError('Las contraseñas no coinciden.');
+      setError("Passwords do not match.");
       setLoading(false);
       return;
     }
 
-    const { error: updateError } = await supabase.auth.updateUser({
-      password: password,
-    });
+    const { error } = await supabase.auth.updateUser({ password });
 
-    if (updateError) {
-      setError('Error al actualizar la contraseña. Intenta de nuevo.');
+    if (error) {
+      console.error(error);
+      setError("Password update failed. Token may be expired.");
       setLoading(false);
       return;
     }
@@ -104,7 +72,6 @@ export default function ResetPasswordPage() {
     setSuccess(true);
     setLoading(false);
 
-    // Redirect to login after 3 seconds
     setTimeout(() => {
       router.push('/login');
     }, 3000);
@@ -114,113 +81,62 @@ export default function ResetPasswordPage() {
     <div className="min-h-screen bg-gradient-to-b from-gray-950 via-black to-gray-950 flex flex-col items-center justify-center px-4">
       <div className="mb-6 flex flex-col items-center">
         <Logo className="w-56 h-auto mb-2" />
-        <p className="text-sm text-white text-center">
-          Portal Administrativo de ASME
-        </p>
+        <p className="text-sm text-white text-center">ASME Admin Portal</p>
       </div>
 
       <Card className="w-full max-w-md shadow-lg border border-border/60">
         <CardHeader>
-          <CardTitle className="text-center text-xl font-headline text-red-500 tracking-tight">
-            Restablecer Contraseña
-          </CardTitle>
-          <p className="text-center text-sm text-gray-400 mt-2">
-            Ingresa tu nueva contraseña
-          </p>
+          <CardTitle className="text-center text-xl text-red-500">Reset Password</CardTitle>
         </CardHeader>
         <CardContent>
           {isChecking ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="text-white text-sm">Verificando enlace...</div>
-            </div>
+            <p className="text-white text-center text-sm py-6">Verifying link...</p>
           ) : success ? (
-            <div className="space-y-4">
-              <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 flex items-start gap-3">
-                <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-green-500 font-medium text-sm">
-                    ¡Contraseña actualizada exitosamente!
-                  </p>
-                  <p className="text-gray-400 text-sm mt-1">
-                    Redirigiendo al inicio de sesión...
-                  </p>
-                </div>
+            <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 flex items-start gap-3">
+              <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5" />
+              <div>
+                <p className="text-green-500 font-medium text-sm">Password updated!</p>
+                <p className="text-gray-400 text-sm mt-1">Redirecting to login...</p>
               </div>
             </div>
           ) : !isValidSession ? (
-            <div className="space-y-4">
-              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-red-500 font-medium text-sm">
-                    Sesión inválida o expirada
-                  </p>
-                  <p className="text-gray-400 text-sm mt-1">
-                    {error}
-                  </p>
-                </div>
+            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />
+              <div>
+                <p className="text-red-500 font-medium text-sm">Invalid or expired session</p>
+                <p className="text-gray-400 text-sm mt-1">{error}</p>
               </div>
-              <Button
-                onClick={() => router.push('/forgot-password')}
-                className="w-full bg-red-500 text-white hover:bg-red-600"
-              >
-                Solicitar nuevo enlace
-              </Button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-white mb-2">
-                  Nueva contraseña
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="pl-10"
-                    required
-                  />
-                </div>
+            <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+              <label className="block text-sm text-white">New Password</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-10 bg-gray-800/50 border-gray-700 text-white"
+                  required
+                />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-white mb-2">
-                  Confirmar contraseña
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="pl-10"
-                    required
-                  />
-                </div>
+              <label className="block text-sm text-white">Confirm Password</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="pl-10 bg-gray-800/50 border-gray-700 text-white"
+                  required
+                />
               </div>
 
-              {error && (
-                <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-                  <p className="text-sm text-red-500 text-center">{error}</p>
-                </div>
-              )}
+              {error && <p className="text-red-500 text-center text-sm">{error}</p>}
 
-              <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
-                <p className="text-sm text-blue-400">
-                  La contraseña debe tener al menos 6 caracteres.
-                </p>
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full bg-red-500 text-white hover:bg-red-600"
-                disabled={loading}
-              >
-                {loading ? 'Actualizando...' : 'Actualizar contraseña'}
+              <Button type="submit" className="w-full bg-red-500 text-white hover:bg-red-600" disabled={loading}>
+                {loading ? 'Updating...' : 'Update password'}
               </Button>
             </form>
           )}
