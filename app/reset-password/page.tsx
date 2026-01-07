@@ -25,79 +25,52 @@ export default function ResetPasswordPage() {
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    let sessionCheckTimeout: NodeJS.Timeout;
+    const handlePasswordRecovery = async () => {
+      try {
+        // Check if there's a hash fragment (for both access_token and PKCE flows)
+        const hashFragment = window.location.hash;
 
-    // Debug: Log the URL hash
-    console.log('🔗 Full URL:', window.location.href);
-    console.log('🔗 URL Hash:', window.location.hash);
+        if (!hashFragment) {
+          setError('No se encontró un token de recuperación. Por favor solicita un nuevo enlace.');
+          setIsChecking(false);
+          return;
+        }
 
-    // Set up auth state listener to handle token from URL
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('🔐 Auth event:', event);
-      console.log('📋 Session:', session);
+        // Supabase will automatically exchange the PKCE token when we call getSession
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-      // Handle any event that gives us a session
-      if (session) {
-        console.log('✅ Valid session found!');
-        setIsValidSession(true);
-        setIsChecking(false);
-        setError('');
-        clearTimeout(sessionCheckTimeout);
-      } else if (event === 'INITIAL_SESSION') {
-        // No session yet, but give Supabase time to process URL hash
-        console.log('⏳ No initial session, waiting for token exchange...');
+        if (sessionError) {
+          console.error('Session error:', sessionError);
+          setError('Error al verificar la sesión. Por favor solicita un nuevo enlace.');
+          setIsChecking(false);
+          return;
+        }
 
-        // Check if there's a token in the URL
-        const hasToken = window.location.hash.includes('access_token');
-        console.log('🎫 Has token in URL?', hasToken);
-
-        if (!hasToken) {
-          // No token at all, show error immediately
-          console.log('❌ No token found in URL');
-          setError('Sesión inválida o expirada. Solicita un nuevo enlace de recuperación.');
+        if (session) {
+          // Valid session established - PKCE token was successfully exchanged
+          setIsValidSession(true);
           setIsChecking(false);
         } else {
-          // Has token, wait for it to be processed
-          sessionCheckTimeout = setTimeout(() => {
-            console.log('⏰ Timeout reached, checking session again...');
-            supabase.auth.getSession().then(({ data: { session }, error: sessionError }) => {
-              if (sessionError) {
-                console.error('❌ Session error:', sessionError);
-              }
-              if (session) {
-                console.log('✅ Session found after timeout!');
-                setIsValidSession(true);
-                setIsChecking(false);
-                setError('');
-              } else {
-                console.log('❌ Still no session - token may be expired or invalid');
-                console.log('Hash still present?', window.location.hash);
+          // No session means the token is invalid or expired
+          const hashParams = new URLSearchParams(hashFragment.substring(1));
+          const errorDescription = hashParams.get('error_description');
+          const errorCode = hashParams.get('error');
 
-                // Try to get more details about why it failed
-                const hashParams = new URLSearchParams(window.location.hash.substring(1));
-                const errorCode = hashParams.get('error');
-                const errorDescription = hashParams.get('error_description');
-
-                console.log('Error code from URL:', errorCode);
-                console.log('Error description:', errorDescription);
-
-                if (errorCode || errorDescription) {
-                  setError(`Error: ${errorDescription || errorCode || 'Token inválido'}`);
-                } else {
-                  setError('El enlace ha expirado o ya fue usado. Solicita un nuevo enlace de recuperación.');
-                }
-                setIsChecking(false);
-              }
-            });
-          }, 3000); // Increased to 3 seconds
+          if (errorDescription || errorCode) {
+            setError(`Error: ${errorDescription || errorCode}`);
+          } else {
+            setError('El enlace de recuperación es inválido o ha expirado. Por favor solicita un nuevo enlace.');
+          }
+          setIsChecking(false);
         }
+      } catch (err) {
+        console.error('Unexpected error:', err);
+        setError('Ocurrió un error inesperado. Por favor intenta de nuevo.');
+        setIsChecking(false);
       }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-      clearTimeout(sessionCheckTimeout);
     };
+
+    handlePasswordRecovery();
   }, [supabase.auth]);
 
   const handleSubmit = async (e: React.FormEvent) => {
