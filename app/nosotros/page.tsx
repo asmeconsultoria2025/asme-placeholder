@@ -70,15 +70,6 @@ async function fetchTeamMembers(): Promise<TeamMember[]> {
 
   return [
     {
-      name: 'Ing. Juan Pérez',
-      position: 'Director General',
-      bio: 'Con más de 20 años de experiencia en protección civil, lidera nuestro equipo con visión estratégica y compromiso con la seguridad. Especialista en gestión de riesgos y cumplimiento normativo.',
-      image_url: '/images/team/team-1.jpg',
-      team_member_images: [],
-      linkedin: 'https://linkedin.com',
-      email: 'juan.perez@asme.com',
-    },
-    {
       name: 'Lic. María González',
       position: 'Directora de Capacitación',
       bio: 'Especialista en formación y desarrollo de competencias en seguridad industrial y protección civil para organizaciones. Más de 15 años diseñando programas de capacitación efectivos.',
