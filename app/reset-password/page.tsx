@@ -22,16 +22,82 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [isValidSession, setIsValidSession] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    // Check if user has a valid recovery session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    let sessionCheckTimeout: NodeJS.Timeout;
+
+    // Debug: Log the URL hash
+    console.log('🔗 Full URL:', window.location.href);
+    console.log('🔗 URL Hash:', window.location.hash);
+
+    // Set up auth state listener to handle token from URL
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('🔐 Auth event:', event);
+      console.log('📋 Session:', session);
+
+      // Handle any event that gives us a session
       if (session) {
+        console.log('✅ Valid session found!');
         setIsValidSession(true);
-      } else {
-        setError('Sesión inválida o expirada. Solicita un nuevo enlace de recuperación.');
+        setIsChecking(false);
+        setError('');
+        clearTimeout(sessionCheckTimeout);
+      } else if (event === 'INITIAL_SESSION') {
+        // No session yet, but give Supabase time to process URL hash
+        console.log('⏳ No initial session, waiting for token exchange...');
+
+        // Check if there's a token in the URL
+        const hasToken = window.location.hash.includes('access_token');
+        console.log('🎫 Has token in URL?', hasToken);
+
+        if (!hasToken) {
+          // No token at all, show error immediately
+          console.log('❌ No token found in URL');
+          setError('Sesión inválida o expirada. Solicita un nuevo enlace de recuperación.');
+          setIsChecking(false);
+        } else {
+          // Has token, wait for it to be processed
+          sessionCheckTimeout = setTimeout(() => {
+            console.log('⏰ Timeout reached, checking session again...');
+            supabase.auth.getSession().then(({ data: { session }, error: sessionError }) => {
+              if (sessionError) {
+                console.error('❌ Session error:', sessionError);
+              }
+              if (session) {
+                console.log('✅ Session found after timeout!');
+                setIsValidSession(true);
+                setIsChecking(false);
+                setError('');
+              } else {
+                console.log('❌ Still no session - token may be expired or invalid');
+                console.log('Hash still present?', window.location.hash);
+
+                // Try to get more details about why it failed
+                const hashParams = new URLSearchParams(window.location.hash.substring(1));
+                const errorCode = hashParams.get('error');
+                const errorDescription = hashParams.get('error_description');
+
+                console.log('Error code from URL:', errorCode);
+                console.log('Error description:', errorDescription);
+
+                if (errorCode || errorDescription) {
+                  setError(`Error: ${errorDescription || errorCode || 'Token inválido'}`);
+                } else {
+                  setError('El enlace ha expirado o ya fue usado. Solicita un nuevo enlace de recuperación.');
+                }
+                setIsChecking(false);
+              }
+            });
+          }, 3000); // Increased to 3 seconds
+        }
       }
     });
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(sessionCheckTimeout);
+    };
   }, [supabase.auth]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -90,7 +156,11 @@ export default function ResetPasswordPage() {
           </p>
         </CardHeader>
         <CardContent>
-          {success ? (
+          {isChecking ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-white text-sm">Verificando enlace...</div>
+            </div>
+          ) : success ? (
             <div className="space-y-4">
               <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 flex items-start gap-3">
                 <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />

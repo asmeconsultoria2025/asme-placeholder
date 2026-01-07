@@ -105,6 +105,17 @@
 input[type="file"]::-webkit-file-upload-button { -webkit-appearance: button; }
 input[type="file"] { background: white !important; }
 
+/* Input autofill fix for dark backgrounds */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: white !important;
+  transition: background-color 5000s ease-in-out 0s;
+  box-shadow: inset 0 0 20px 20px rgba(31, 41, 55, 0.5) !important;
+}
+
 /* Legal font scope */
 @layer base {
   .legal-font-scope h1,
