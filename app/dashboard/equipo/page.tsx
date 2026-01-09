@@ -675,7 +675,7 @@ export default function TeamManagementPage() {
                       const response = await fetch('/api/auth/invite-user', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email: inviteEmail, role: 'team_member' })
+                        body: JSON.stringify({ email: inviteEmail, role: 'admin' })
                       });
 
                       const data = await response.json();

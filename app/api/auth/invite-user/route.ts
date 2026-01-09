@@ -6,7 +6,7 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, role = 'team_member' } = await request.json();
+    const { email, role = 'admin' } = await request.json();
 
     if (!email) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
@@ -25,6 +25,7 @@ export async function POST(request: NextRequest) {
       redirectTo: `${baseUrl}/set-password`,
       data: {
         role: role,
+        is_admin: true,
         invited_at: new Date().toISOString()
       }
     });

@@ -69,6 +69,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
+  // If accessing dashboard, verify admin status
+  if (user && request.nextUrl.pathname.startsWith('/dashboard')) {
+    const isAdmin = user.user_metadata?.is_admin === true;
+    if (!isAdmin) {
+      return NextResponse.redirect(new URL('/login?error=unauthorized', request.url))
+    }
+  }
+
   // If logged in and trying to access login page, redirect to dashboard
   if (user && request.nextUrl.pathname === '/login') {
     return NextResponse.redirect(new URL('/dashboard', request.url))
