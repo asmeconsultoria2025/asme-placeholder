@@ -73,12 +73,13 @@ export default async function proxy(request: NextRequest) {
   if (user && request.nextUrl.pathname.startsWith('/dashboard')) {
     const isAdmin = user.user_metadata?.is_admin === true;
     if (!isAdmin) {
+      // Sign out and redirect to login
       return NextResponse.redirect(new URL('/login?error=unauthorized', request.url))
     }
   }
 
-  // If logged in and trying to access login page, redirect to dashboard
-  if (user && request.nextUrl.pathname === '/login') {
+  // If logged in and trying to access login page (without error), redirect to dashboard
+  if (user && request.nextUrl.pathname === '/login' && !request.nextUrl.searchParams.get('error')) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
