@@ -26,7 +26,7 @@ export default function ForgotPasswordPage() {
     setError('');
 
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: "https://asmeconsultoria.com/reset-password",
+      redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://asmeconsultoria.com'}/set-password`,
     });
 
     if (resetError) {

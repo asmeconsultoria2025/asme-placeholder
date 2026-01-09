@@ -59,8 +59,8 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Allow reset-password page access without auth (users need to access this from email links)
-  if (request.nextUrl.pathname === '/reset-password') {
+  // Allow reset-password and set-password page access without auth
+  if (request.nextUrl.pathname === '/reset-password' || request.nextUrl.pathname === '/set-password') {
     return response
   }
 
@@ -82,5 +82,6 @@ export const config = {
     '/dashboard/:path*',
     '/login',
     '/reset-password',
+    '/set-password',
   ],
 }

@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Plus, Edit, Trash2, Save, X, Upload, Image as ImageIcon } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Upload, Image as ImageIcon, Mail, Send } from 'lucide-react';
 import Image from 'next/image';
 import {
   getAllTeamMembers,
@@ -39,6 +39,9 @@ export default function TeamManagementPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadingGallery, setUploadingGallery] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviting, setInviting] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -240,16 +243,25 @@ export default function TeamManagementPage() {
           <h1 className="text-3xl font-bold text-gray-900">Gestión de Equipo</h1>
           <p className="text-gray-600 mt-2">Administra los miembros del equipo que aparecen en la página "Nosotros"</p>
         </div>
-        <button
-          onClick={() => {
-            resetForm();
-            setShowCreateModal(true);
-          }}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          <Plus size={20} />
-          Agregar Miembro
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShowInviteModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            <Mail size={20} />
+            Invitar Usuario
+          </button>
+          <button
+            onClick={() => {
+              resetForm();
+              setShowCreateModal(true);
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <Plus size={20} />
+            Agregar Miembro
+          </button>
+        </div>
       </div>
 
       {/* Team Members Grid */}
@@ -600,6 +612,104 @@ export default function TeamManagementPage() {
               >
                 Crear Miembro
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Invite User Modal */}
+      {showInviteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-2xl max-w-md w-full p-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Invitar Usuario</h2>
+              <button
+                onClick={() => {
+                  setShowInviteModal(false);
+                  setInviteEmail('');
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Correo Electrónico
+                </label>
+                <input
+                  type="email"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  placeholder="usuario@ejemplo.com"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  disabled={inviting}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Se enviará un correo con un enlace para establecer la contraseña
+                </p>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => {
+                    setShowInviteModal(false);
+                    setInviteEmail('');
+                  }}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  disabled={inviting}
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={async () => {
+                    if (!inviteEmail || !inviteEmail.includes('@')) {
+                      alert('Por favor ingresa un correo válido');
+                      return;
+                    }
+
+                    setInviting(true);
+                    try {
+                      const response = await fetch('/api/auth/invite-user', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: inviteEmail, role: 'team_member' })
+                      });
+
+                      const data = await response.json();
+
+                      if (!response.ok) {
+                        throw new Error(data.error || 'Error al enviar invitación');
+                      }
+
+                      alert('Invitación enviada exitosamente. El usuario recibirá un correo para establecer su contraseña.');
+                      setShowInviteModal(false);
+                      setInviteEmail('');
+                    } catch (error: any) {
+                      console.error('Error inviting user:', error);
+                      alert(error.message || 'Error al enviar la invitación');
+                    } finally {
+                      setInviting(false);
+                    }
+                  }}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={inviting}
+                >
+                  {inviting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Enviando...
+                    </>
+                  ) : (
+                    <>
+                      <Send size={16} />
+                      Enviar Invitación
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
