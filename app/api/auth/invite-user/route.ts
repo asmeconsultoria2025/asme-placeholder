@@ -20,8 +20,9 @@ export async function POST(request: NextRequest) {
     });
 
     // Create user with admin API - sends invite email automatically
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://asmeconsultoria.com';
     const { data, error } = await supabase.auth.admin.inviteUserByEmail(email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://asmeconsultoria.com'}/set-password`,
+      redirectTo: `${baseUrl}/set-password`,
       data: {
         role: role,
         invited_at: new Date().toISOString()
