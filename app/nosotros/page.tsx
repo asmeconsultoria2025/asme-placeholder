@@ -67,27 +67,6 @@ async function fetchTeamMembers(): Promise<TeamMember[]> {
   } catch (error) {
     console.error('Error fetching team members:', error);
   }
-
-  return [
-    {
-      name: 'Lic. María González',
-      position: 'Directora de Capacitación',
-      bio: 'Especialista en formación y desarrollo de competencias en seguridad industrial y protección civil para organizaciones. Más de 15 años diseñando programas de capacitación efectivos.',
-      image_url: '/images/team/team-2.jpg',
-      team_member_images: [],
-      linkedin: 'https://linkedin.com',
-      email: 'maria.gonzalez@asme.com',
-    },
-    {
-      name: 'Ing. Carlos Ramírez',
-      position: 'Director Técnico',
-      bio: 'Experto en diseño e implementación de programas internos de protección civil, con enfoque en innovación y cumplimiento normativo. Certificado en sistemas de gestión de seguridad.',
-      image_url: '/images/team/team-3.jpg',
-      team_member_images: [],
-      linkedin: 'https://linkedin.com',
-      email: 'carlos.ramirez@asme.com',
-    },
-  ];
 }
 
 export default async function NosotrosPage() {

@@ -49,7 +49,7 @@ export default function SetPasswordPage() {
 
         if (error) {
           console.error('Session error:', error);
-          setError('Invalid or expired link. Please request a new one.');
+          setError('Enlace inválido o expirado. Por favor solicita uno nuevo.');
           setIsValidSession(false);
         } else {
           setIsValidSession(true);
@@ -64,14 +64,14 @@ export default function SetPasswordPage() {
 
         if (error) {
           console.error('Token verification error:', error);
-          setError('Invalid or expired link. Please request a new one.');
+          setError('Enlace inválido o expirado. Por favor solicita uno nuevo.');
           setIsValidSession(false);
         } else {
           setIsValidSession(true);
           setTokenType(type === 'recovery' ? 'recovery' : 'invite');
         }
       } else {
-        setError('No valid session found. Please use the link from your email.');
+        setError('No se encontró una sesión válida. Por favor usa el enlace de tu correo.');
         setIsValidSession(false);
       }
 
@@ -82,10 +82,10 @@ export default function SetPasswordPage() {
   }, [supabase.auth]);
 
   const validatePassword = (pwd: string): string | null => {
-    if (pwd.length < 8) return 'Password must be at least 8 characters';
-    if (!/[A-Z]/.test(pwd)) return 'Password must contain at least one uppercase letter';
-    if (!/[a-z]/.test(pwd)) return 'Password must contain at least one lowercase letter';
-    if (!/[0-9]/.test(pwd)) return 'Password must contain at least one number';
+    if (pwd.length < 8) return 'La contraseña debe tener al menos 8 caracteres';
+    if (!/[A-Z]/.test(pwd)) return 'La contraseña debe contener al menos una mayúscula';
+    if (!/[a-z]/.test(pwd)) return 'La contraseña debe contener al menos una minúscula';
+    if (!/[0-9]/.test(pwd)) return 'La contraseña debe contener al menos un número';
     return null;
   };
 
@@ -103,7 +103,7 @@ export default function SetPasswordPage() {
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError('Las contraseñas no coinciden');
       setLoading(false);
       return;
     }
@@ -115,7 +115,7 @@ export default function SetPasswordPage() {
 
     if (updateError) {
       console.error('Password update error:', updateError);
-      setError('Failed to set password. The link may have expired.');
+      setError('Error al configurar contraseña. El enlace puede haber expirado.');
       setLoading(false);
       return;
     }
@@ -136,12 +136,12 @@ export default function SetPasswordPage() {
       <Card className="w-full max-w-md border border-border/60">
         <CardHeader>
           <CardTitle className="text-center text-xl text-red-500">
-            {tokenType === 'invite' ? 'Set Your Password' : 'Reset Password'}
+            {tokenType === 'invite' ? 'Configurar Contraseña' : 'Restablecer Contraseña'}
           </CardTitle>
           <CardDescription className="text-center text-gray-400">
             {tokenType === 'invite' 
-              ? 'Create a secure password for your account'
-              : 'Choose a new password for your account'
+              ? 'Crea una contraseña segura para tu cuenta'
+              : 'Elige una nueva contraseña para tu cuenta'
             }
           </CardDescription>
         </CardHeader>
@@ -150,7 +150,7 @@ export default function SetPasswordPage() {
           {isChecking && (
             <div className="py-6 text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500 mx-auto mb-4"></div>
-              <p className="text-white">Verifying your link...</p>
+              <p className="text-white">Verificando tu enlace...</p>
             </div>
           )}
 
@@ -158,8 +158,8 @@ export default function SetPasswordPage() {
             <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 flex gap-3">
               <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-green-500 font-medium text-sm">Password set successfully!</p>
-                <p className="text-gray-400 text-sm mt-1">Redirecting to login...</p>
+                <p className="text-green-500 font-medium text-sm">Contraseña configurada exitosamente</p>
+                <p className="text-gray-400 text-sm mt-1">Redirigiendo al inicio de sesión...</p>
               </div>
             </div>
           )}
@@ -169,7 +169,7 @@ export default function SetPasswordPage() {
               <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 flex gap-3">
                 <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-red-500 font-medium text-sm">Link Invalid or Expired</p>
+                  <p className="text-red-500 font-medium text-sm">Enlace Inválido o Expirado</p>
                   <p className="text-gray-400 text-sm mt-1">{error}</p>
                 </div>
               </div>
@@ -177,7 +177,7 @@ export default function SetPasswordPage() {
                 onClick={() => router.push('/forgot-password')}
                 className="w-full bg-white text-black hover:bg-gray-100"
               >
-                Request New Link
+                Solicitar Nuevo Enlace
               </Button>
             </div>
           )}
@@ -186,7 +186,7 @@ export default function SetPasswordPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-white mb-2">
-                  New Password
+                  Nueva Contraseña
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 z-10" />
@@ -195,7 +195,7 @@ export default function SetPasswordPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-10 pr-10 bg-gray-800/50 border-gray-700 text-white"
-                    placeholder="Enter new password"
+                    placeholder="Ingresa tu nueva contraseña"
                     required
                     disabled={loading}
                   />
@@ -208,13 +208,13 @@ export default function SetPasswordPage() {
                   </button>
                 </div>
                 <p className="text-xs text-gray-400 mt-1">
-                  Must be 8+ characters with uppercase, lowercase, and number
+                  Debe tener 8+ caracteres con mayúsculas, minúsculas y números
                 </p>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-white mb-2">
-                  Confirm Password
+                  Confirmar Contraseña
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 z-10" />
@@ -223,7 +223,7 @@ export default function SetPasswordPage() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className="pl-10 pr-10 bg-gray-800/50 border-gray-700 text-white"
-                    placeholder="Confirm new password"
+                    placeholder="Confirma tu nueva contraseña"
                     required
                     disabled={loading}
                   />
@@ -248,7 +248,7 @@ export default function SetPasswordPage() {
                 className="w-full bg-red-500 hover:bg-red-600 text-white" 
                 disabled={loading}
               >
-                {loading ? 'Setting Password...' : 'Set Password'}
+                {loading ? 'Configurando Contraseña...' : 'Configurar Contraseña'}
               </Button>
             </form>
           )}
