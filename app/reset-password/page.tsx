@@ -1,31 +1,30 @@
 'use client';
 
-import { useState, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/app/components/ui/card';
 import { Logo } from '@/app/components/common/logo';
 import { createBrowserClient } from '@supabase/ssr';
-import { Lock, Eye, EyeOff, KeyRound, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Lock, Eye, EyeOff, KeyRound, CheckCircle2, AlertCircle, Mail } from 'lucide-react';
 
-function ResetPasswordForm() {
+export default function ResetPasswordPage() {
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const emailParam = searchParams.get('email') || '';
 
-  const [step, setStep] = useState<'code' | 'password'>('code');
-  const [email, setEmail] = useState(emailParam);
+  const [step, setStep] = useState<'email' | 'code' | 'password'>('email');
+  const [email, setEmail] = useState('');
   const [token, setToken] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
@@ -37,22 +36,38 @@ function ResetPasswordForm() {
     return null;
   };
 
-  const handleVerifyCode = async (e: React.FormEvent) => {
+  const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setMessage('');
 
-    if (!email || !token) {
-      setError('Ingresa tu correo y el código');
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: 'https://asmeconsultoria.com/reset-password',
+    });
+
+    if (error) {
+      setError(error.message);
       setLoading(false);
       return;
     }
 
-    // Use server route to bypass CORS
+    setMessage('Código enviado a tu correo');
+    setStep('code');
+    setLoading(false);
+  };
+
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setMessage('');
+
+    // Usa tu API route para evitar problemas de CORS
     const res = await fetch('/api/auth/verify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, token: token.trim(), type: 'recovery' }),
+      body: JSON.stringify({ email: email.trim(), token: token.trim(), type: 'recovery' }),
     });
 
     const data = await res.json();
@@ -63,7 +78,7 @@ function ResetPasswordForm() {
       return;
     }
 
-    // Set session for password update
+    // Sesión establecida
     if (data.session) {
       await supabase.auth.setSession({
         access_token: data.session.access_token,
@@ -71,8 +86,23 @@ function ResetPasswordForm() {
       });
     }
 
-    // Code verified, now show password form
     setStep('password');
+    setLoading(false);
+  };
+
+  const handleResendCode = async () => {
+    setLoading(true);
+    setError('');
+    setMessage('');
+    setToken(''); // limpia el código anterior
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim());
+
+    if (error) {
+      setError(error.message);
+    } else {
+      setMessage('¡Nuevo código enviado! Revísalo en tu correo.');
+    }
     setLoading(false);
   };
 
@@ -94,9 +124,7 @@ function ResetPasswordForm() {
       return;
     }
 
-    const { error: updateError } = await supabase.auth.updateUser({
-      password,
-    });
+    const { error: updateError } = await supabase.auth.updateUser({ password });
 
     if (updateError) {
       setError(updateError.message);
@@ -105,163 +133,23 @@ function ResetPasswordForm() {
     }
 
     setSuccess(true);
-    setLoading(false);
-    setTimeout(() => router.push('/dashboard'), 1500);
+    setTimeout(() => router.push('/dashboard'), 2000);
   };
 
   if (success) {
     return (
-      <Card className="w-full max-w-md border border-border/60">
-        <CardContent className="pt-6">
-          <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 flex gap-3">
-            <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-            <div>
-              <p className="text-green-500 font-medium text-sm">Contraseña actualizada</p>
-              <p className="text-gray-400 text-sm mt-1">Redirigiendo al dashboard...</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="min-h-screen bg-gradient-to-b from-gray-950 via-black to-gray-950 flex flex-col items-center justify-center px-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-10 text-center">
+            <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-4" />
+            <p className="text-white text-xl font-medium">¡Contraseña actualizada!</p>
+            <p className="text-gray-400 mt-2">Redirigiendo al dashboard...</p>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
-  if (step === 'password') {
-    return (
-      <Card className="w-full max-w-md border border-border/60">
-        <CardHeader>
-          <CardTitle className="text-center text-xl text-red-500">Nueva Contraseña</CardTitle>
-          <CardDescription className="text-center text-gray-400">
-            Ingresa tu nueva contraseña
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSetPassword} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-white mb-2">Nueva Contraseña</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 z-10" />
-                <Input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 pr-10 bg-gray-800/50 border-gray-700 text-white"
-                  placeholder="Mínimo 8 caracteres"
-                  required
-                  disabled={loading}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-white mb-2">Confirmar Contraseña</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 z-10" />
-                <Input
-                  type={showPassword ? 'text' : 'password'}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="pl-10 bg-gray-800/50 border-gray-700 text-white"
-                  placeholder="Confirma tu contraseña"
-                  required
-                  disabled={loading}
-                />
-              </div>
-            </div>
-
-            {error && (
-              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 flex gap-2">
-                <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
-                <p className="text-sm text-red-500">{error}</p>
-              </div>
-            )}
-
-            <Button 
-              type="submit" 
-              className="w-full bg-red-500 hover:bg-red-600 text-white" 
-              disabled={loading}
-            >
-              {loading ? 'Guardando...' : 'Guardar Contraseña'}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card className="w-full max-w-md border border-border/60">
-      <CardHeader>
-        <CardTitle className="text-center text-xl text-red-500">Restablecer Contraseña</CardTitle>
-        <CardDescription className="text-center text-gray-400">
-          Ingresa el código de 6 dígitos que recibiste por correo
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleVerifyCode} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-white mb-2">Correo Electrónico</label>
-            <Input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="bg-gray-800/50 border-gray-700 text-white"
-              placeholder="tu@email.com"
-              required
-              disabled={loading}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-white mb-2">Código de Recuperación</label>
-            <div className="relative">
-              <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 z-10" />
-              <Input
-                type="text"
-                value={token}
-                onChange={(e) => setToken(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                className="pl-10 bg-gray-800/50 border-gray-700 text-white text-center text-2xl tracking-widest"
-                placeholder="000000"
-                maxLength={6}
-                required
-                disabled={loading}
-              />
-            </div>
-          </div>
-
-          {error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 flex gap-2">
-              <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
-              <p className="text-sm text-red-500">{error}</p>
-            </div>
-          )}
-
-          <Button 
-            type="submit" 
-            className="w-full bg-red-500 hover:bg-red-600 text-white" 
-            disabled={loading || token.length !== 6}
-          >
-            {loading ? 'Verificando...' : 'Verificar Código'}
-          </Button>
-
-          <p className="text-center text-sm text-gray-400 mt-4">
-            <a href="/forgot-password" className="text-red-500 hover:underline">
-              Solicitar nuevo código
-            </a>
-          </p>
-        </form>
-      </CardContent>
-    </Card>
-  );
-}
-
-export default function ResetPasswordPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-950 via-black to-gray-950 flex flex-col items-center justify-center px-4">
       <div className="mb-6 flex flex-col items-center">
@@ -269,13 +157,129 @@ export default function ResetPasswordPage() {
         <p className="text-sm text-white text-center">ASME Admin Portal</p>
       </div>
 
-      <Suspense fallback={
-        <Card className="w-full max-w-md border border-border/60">
-          <CardContent className="p-8 text-center text-white">Cargando...</CardContent>
-        </Card>
-      }>
-        <ResetPasswordForm />
-      </Suspense>
+      <Card className="w-full max-w-md border border-border/60">
+        <CardHeader>
+          <CardTitle className="text-center text-xl text-red-500">
+            {step === 'email' && 'Restablecer Contraseña'}
+            {step === 'code' && 'Verificar Código'}
+            {step === 'password' && 'Nueva Contraseña'}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {/* Paso 1: Pedir email */}
+          {step === 'email' && (
+            <form onSubmit={handleSendCode} className="space-y-4">
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="tu@email.com"
+                  className="pl-10 bg-gray-800/50 border-gray-700 text-white"
+                  required
+                  disabled={loading}
+                />
+              </div>
+              {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+              <Button type="submit" className="w-full bg-red-500 hover:bg-red-600" disabled={loading}>
+                {loading ? 'Enviando...' : 'Enviar Código'}
+              </Button>
+            </form>
+          )}
+
+          {/* Paso 2: Ingresar código */}
+          {step === 'code' && (
+            <>
+              <form onSubmit={handleVerifyCode} className="space-y-4">
+                <p className="text-sm text-gray-400 text-center">
+                  Código enviado a <span className="font-medium text-white">{email}</span>
+                </p>
+                <div className="relative">
+                  <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    type="text"
+                    value={token}
+                    onChange={(e) => setToken(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder="000000"
+                    className="pl-10 text-center text-2xl tracking-widest bg-gray-800/50 border-gray-700 text-white"
+                    maxLength={6}
+                    required
+                    disabled={loading}
+                  />
+                </div>
+
+                {error && (
+                  <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 flex gap-2">
+                    <AlertCircle className="h-4 w-4 text-red-500 flex-shrink-0" />
+                    <p className="text-sm text-red-500">{error}</p>
+                  </div>
+                )}
+
+                {message && <p className="text-green-500 text-sm text-center">{message}</p>}
+
+                <Button type="submit" className="w-full bg-red-500 hover:bg-red-600" disabled={loading || token.length !== 6}>
+                  {loading ? 'Verificando...' : 'Verificar Código'}
+                </Button>
+              </form>
+
+              <div className="mt-4 text-center">
+                <button
+                  onClick={handleResendCode}
+                  disabled={loading}
+                  className="text-red-500 hover:underline text-sm font-medium"
+                >
+                  {loading ? 'Enviando...' : 'Solicitar nuevo código'}
+                </button>
+                <p className="text-xs text-gray-500 mt-2">
+                  Si el código dice "expirado", solicita uno nuevo.<br />
+                  Gmail y Outlook a veces lo invalidan automáticamente.
+                </p>
+              </div>
+            </>
+          )}
+
+          {/* Paso 3: Nueva contraseña */}
+          {step === 'password' && (
+            <form onSubmit={handleSetPassword} className="space-y-4">
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Nueva contraseña"
+                  className="pl-10 pr-10 bg-gray-800/50 border-gray-700 text-white"
+                  required
+                  disabled={loading}
+                />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2">
+                  {showPassword ? <EyeOff className="h-4 w-4 text-gray-400" /> : <Eye className="h-4 w-4 text-gray-400" />}
+                </button>
+              </div>
+
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  type={showPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirmar contraseña"
+                  className="pl-10 bg-gray-800/50 border-gray-700 text-white"
+                  required
+                  disabled={loading}
+                />
+              </div>
+
+              {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+
+              <Button type="submit" className="w-full bg-red-500 hover:bg-red-600" disabled={loading}>
+                {loading ? 'Guardando...' : 'Cambiar Contraseña'}
+              </Button>
+            </form>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
