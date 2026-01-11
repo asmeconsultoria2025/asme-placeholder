@@ -335,7 +335,11 @@ const [currentView, setCurrentView] = useState<"month" | "week" | "day">("month"
 
         // Load audiencias ALWAYS
         const audRes = await listAllAudiencias();
-        if (!audRes.error) setAudiencias(audRes.data || []);
+        console.log('[AGENDA] Audiencias result:', audRes);
+        if (audRes.error) {
+          console.error('[AGENDA] Audiencias error:', audRes.error);
+        }
+        setAudiencias(audRes.data || []);
       } catch {
         setErrorMsg("Error de red al cargar citas.");
       }
