@@ -58,6 +58,10 @@ export default function EditCasePage() {
   const [assignedTo, setAssignedTo] = useState('');
   const [summary, setSummary] = useState('');
   const [nextDate, setNextDate] = useState(''); // yyyy-MM-dd
+  const [clientName, setClientName] = useState('');
+  const [caseNumber, setCaseNumber] = useState('');
+  const [clientPhone, setClientPhone] = useState('');
+  const [clientEmail, setClientEmail] = useState('');
 
   useEffect(() => {
     let active = true;
@@ -100,6 +104,10 @@ export default function EditCasePage() {
       setAssignedTo(data.assignedTo || '');
       setSummary(data.summary || '');
       setNextDate(formatDateInput(data.nextDate ?? null));
+      setClientName(data.clientName || '');
+      setCaseNumber(data.caseNumber || '');
+      setClientPhone(data.clientPhone || '');
+      setClientEmail(data.clientEmail || '');
 
       setLoading(false);
     })();
@@ -119,6 +127,26 @@ export default function EditCasePage() {
 
     const updates: Record<string, any> = {};
     const changedFields: string[] = [];
+
+    if ((caseNumber || '') !== (originalCaso.caseNumber || '')) {
+      updates.case_number = caseNumber;
+      changedFields.push('Número de expediente');
+    }
+
+    if ((clientName || '') !== (originalCaso.clientName || '')) {
+      updates.client_name = clientName;
+      changedFields.push('Cliente');
+    }
+
+    if ((clientPhone || '') !== (originalCaso.clientPhone || '')) {
+      updates.client_phone = clientPhone || null;
+      changedFields.push('Teléfono del cliente');
+    }
+
+    if ((clientEmail || '') !== (originalCaso.clientEmail || '')) {
+      updates.client_email = clientEmail || null;
+      changedFields.push('Email del cliente');
+    }
 
     if (status !== originalCaso.status) {
       updates.status = status;
@@ -220,11 +248,8 @@ export default function EditCasePage() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
-            Editar expediente: {originalCaso.caseNumber}
+            Editar expediente
           </h1>
-          <p className="text-sm text-muted-foreground">
-            Cliente: {originalCaso.clientName}
-          </p>
         </div>
         <Button
           variant="outline"
@@ -241,6 +266,48 @@ export default function EditCasePage() {
           {errorMsg && (
             <p className="text-sm text-red-500">{errorMsg}</p>
           )}
+
+          {/* Número de expediente */}
+          <div className="space-y-1">
+            <label className="text-sm font-medium">Número de expediente</label>
+            <Input
+              value={caseNumber}
+              onChange={(e) => setCaseNumber(e.target.value)}
+              placeholder="Ej: 1234/2024"
+            />
+          </div>
+
+          {/* Cliente */}
+          <div className="space-y-1">
+            <label className="text-sm font-medium">Cliente</label>
+            <Input
+              value={clientName}
+              onChange={(e) => setClientName(e.target.value)}
+              placeholder="Nombre del cliente"
+            />
+          </div>
+
+          {/* Teléfono del cliente */}
+          <div className="space-y-1">
+            <label className="text-sm font-medium">Teléfono del cliente</label>
+            <Input
+              type="tel"
+              value={clientPhone}
+              onChange={(e) => setClientPhone(e.target.value)}
+              placeholder="Ej: 55 1234 5678"
+            />
+          </div>
+
+          {/* Email del cliente */}
+          <div className="space-y-1">
+            <label className="text-sm font-medium">Email del cliente</label>
+            <Input
+              type="email"
+              value={clientEmail}
+              onChange={(e) => setClientEmail(e.target.value)}
+              placeholder="cliente@ejemplo.com"
+            />
+          </div>
 
           {/* Estatus */}
           <div className="space-y-1">

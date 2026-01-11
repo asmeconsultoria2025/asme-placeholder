@@ -381,7 +381,7 @@ const [currentView, setCurrentView] = useState<"month" | "week" | "day">("month"
           source: "asme_abogados",
           service_key: "audiencia",
           service_label: a.tipo ? `Audiencia — ${a.tipo}` : "Audiencia",
-          customer_name: "Audiencia",
+          customer_name: a.clientName || "Cliente no asignado",
           customer_email: "",
           customer_phone: "",
           participants: null,

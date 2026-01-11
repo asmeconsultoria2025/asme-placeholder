@@ -57,7 +57,7 @@ export default function DashboardClientLayout({ children }: { children: ReactNod
       {/* MAIN CONTENT */}
       <div className="flex-1 flex flex-col">
         {/* TOP BAR */}
-        <header className="border-b bg-white/60 backdrop-blur-md">
+        <header className="border-b bg-white shadow-sm">
           <div className="flex h-14 items-center px-4 gap-3">
             <button
               type="button"

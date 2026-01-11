@@ -125,7 +125,7 @@ export default function DashboardPage() {
 
         {/* Casos Abiertos */}
         <motion.div whileHover={{ scale: 1.03, y: -3 }} transition={{ type: "spring", stiffness: 200, damping: 15 }}>
-          <Card className="border border-white/20 shadow-sm backdrop-blur-sm bg-white/70">
+          <Card className="border shadow-sm bg-white">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Casos abiertos</CardTitle>
               <FolderOpen className="h-4 w-4 text-blue-600" />
@@ -145,7 +145,7 @@ export default function DashboardPage() {
           transition={{ repeat: Infinity, duration: 1.8, ease: "easeInOut" }}
         >
           <motion.div whileHover={{ scale: 1.06, y: -5 }} transition={{ type: "spring", stiffness: 200, damping: 14 }}>
-            <Card className="border border-white/20 shadow-sm backdrop-blur-sm bg-white/70">
+            <Card className="border shadow-sm bg-white">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">Audiencias urgentes</CardTitle>
                 <AlertTriangle className="h-4 w-4 text-red-600" />
@@ -162,7 +162,7 @@ export default function DashboardPage() {
 
         {/* Today */}
         <motion.div whileHover={{ scale: 1.03, y: -3 }} transition={{ type: "spring", stiffness: 200, damping: 15 }}>
-          <Card className="border border-white/20 shadow-sm backdrop-blur-sm bg-white/70">
+          <Card className="border shadow-sm bg-white">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Audiencias de hoy</CardTitle>
               <CalendarDays className="h-4 w-4 text-green-600" />
@@ -184,7 +184,7 @@ export default function DashboardPage() {
       <div className="grid gap-6 lg:grid-cols-2 mt-8">
 
         {/* Urgent List */}
-        <Card className="border border-white/20 backdrop-blur-sm bg-white/70">
+        <Card className="border shadow-sm bg-white">
           <CardHeader>
             <CardTitle className="text-lg font-medium">Audiencias urgentes</CardTitle>
             <CardDescription>Programadas en menos de 72 horas</CardDescription>
@@ -196,7 +196,7 @@ export default function DashboardPage() {
             )}
 
             {urgentAudiencias.map(a => (
-              <div key={a.id} className="p-3 rounded border bg-white/50 backdrop-blur-sm">
+              <div key={a.id} className="p-3 rounded border bg-white">
                 <p className="text-sm font-medium">
                   {new Date(a.fecha).toLocaleString("es-MX")}
                 </p>
@@ -215,7 +215,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Today List */}
-        <Card className="border border-white/20 backdrop-blur-sm bg-white/70">
+        <Card className="border shadow-sm bg-white">
           <CardHeader>
             <CardTitle className="text-lg font-medium">Audiencias de hoy</CardTitle>
             <CardDescription>Sesiones programadas hoy</CardDescription>
@@ -227,7 +227,7 @@ export default function DashboardPage() {
             )}
 
             {todayAudiencias.map(a => (
-              <div key={a.id} className="p-3 rounded border bg-white/50 backdrop-blur-sm">
+              <div key={a.id} className="p-3 rounded border bg-white">
                 <p className="text-sm font-medium">
                   {new Date(a.fecha).toLocaleString("es-MX")}
                 </p>

@@ -43,12 +43,12 @@ export default function Sidebar({ collapsed }: { collapsed: boolean }) {
   return (
     <aside
       className={cn(
-        'flex flex-col border-r backdrop-blur-xl bg-white/60 shadow-[2px_0_15px_rgba(0,0,0,0.06)] transition-all duration-300',
+        'flex flex-col border-r bg-white shadow-sm transition-all duration-300',
         collapsed ? 'w-16' : 'w-60'
       )}
     >
       {/* TOP LOGO */}
-      <div className="flex h-14 items-center justify-center border-b bg-white/50 backdrop-blur-md">
+      <div className="flex h-14 items-center justify-center border-b bg-white">
         {collapsed ? (
           <div className="h-8 w-8 rounded-lg bg-asmeBlue flex items-center justify-center text-white text-xs font-bold">
             A

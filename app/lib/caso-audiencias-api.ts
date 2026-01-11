@@ -21,6 +21,7 @@ export interface CasoAudiencia {
   notas: string | null;
   createdAt: string;
   updatedAt: string;
+  clientName?: string; // From joined casos table
 }
 
 type AudienciaRow = {
@@ -33,6 +34,7 @@ type AudienciaRow = {
   notas: string | null;
   created_at: string;
   updated_at: string;
+  casos?: { client_name: string } | null;
 };
 
 function mapRow(row: AudienciaRow): CasoAudiencia {
@@ -46,6 +48,7 @@ function mapRow(row: AudienciaRow): CasoAudiencia {
     notas: row.notas,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    clientName: row.casos?.client_name || undefined,
   };
 }
 
@@ -98,7 +101,7 @@ export async function listAllAudiencias(): Promise<{
 
   const { data, error } = await supabase
     .from('caso_audiencias')
-    .select('*')
+    .select('*, casos(client_name)')
     .order('fecha', { ascending: true });
 
   if (error) {
