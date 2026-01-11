@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       await supabase.auth.admin.deleteUser(existingUser.id);
     }
 
-    // Create user with email verification required (sends OTP)
+    // Create user with email verification required
     const { data, error } = await supabase.auth.admin.createUser({
       email,
       password,
@@ -43,6 +43,18 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
+    // Manually send OTP email (admin.createUser doesn't auto-send)
+    const { error: otpError } = await supabase.auth.admin.generateLink({
+      type: 'signup',
+      email: email,
+      password: password,
+    });
+
+    if (otpError) {
+      console.error('Failed to send OTP:', otpError);
+      // Don't fail the request, user can resend from verify page
     }
 
     return NextResponse.json({
