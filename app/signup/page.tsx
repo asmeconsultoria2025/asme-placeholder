@@ -57,7 +57,6 @@ export default function SignupPage() {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/dashboard`,
         data: {
           name,
           is_admin: true,
@@ -71,16 +70,21 @@ export default function SignupPage() {
       return;
     }
 
-    // If email confirmation is disabled, session exists immediately
-    if (data.session) {
-      setSuccess(true);
+    // Auto-login immediately after signup
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (signInError) {
+      setError('Cuenta creada pero error al iniciar sesión. Intenta iniciar sesión manualmente.');
       setLoading(false);
-      setTimeout(() => router.push('/dashboard'), 1500);
-    } else {
-      // Email confirmation required
-      setSuccess(true);
-      setLoading(false);
+      return;
     }
+
+    setSuccess(true);
+    setLoading(false);
+    setTimeout(() => router.push('/dashboard'), 1000);
   };
 
   return (
