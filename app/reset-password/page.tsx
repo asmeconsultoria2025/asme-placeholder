@@ -42,8 +42,13 @@ export default function ResetPasswordPage() {
     setError('');
     setMessage('');
 
-    // Pure OTP flow - no redirectTo needed (user enters code manually)
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim());
+    // PURE OTP FLOW - Use signInWithOtp, NOT resetPasswordForEmail
+    const { error } = await supabase.auth.signInWithOtp({
+      email: email.trim(),
+      options: {
+        shouldCreateUser: false, // Only existing users can reset password
+      },
+    });
 
     if (error) {
       setError(error.message);
@@ -62,28 +67,22 @@ export default function ResetPasswordPage() {
     setError('');
     setMessage('');
 
-    // Usa tu API route para evitar problemas de CORS
-    const res = await fetch('/api/auth/verify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email.trim(), token: token.trim(), type: 'recovery' }),
+    // Verify OTP directly - DO NOT manually call setSession after
+    // Supabase automatically sets the session when verifyOtp succeeds
+    const { error: verifyError } = await supabase.auth.verifyOtp({
+      email: email.trim(),
+      token: token.trim(),
+      type: 'email', // Changed from 'recovery' to 'email' for signInWithOtp flow
     });
 
-    const data = await res.json();
-
-    if (!res.ok) {
-      setError(data.error || 'Código inválido o expirado');
+    if (verifyError) {
+      setError(verifyError.message || 'Código inválido o expirado');
       setLoading(false);
       return;
     }
 
-    // Sesión establecida
-    if (data.session) {
-      await supabase.auth.setSession({
-        access_token: data.session.access_token,
-        refresh_token: data.session.refresh_token,
-      });
-    }
+    // Session is ALREADY set by verifyOtp - DO NOT call setSession again
+    console.log('[RESET-PASSWORD] OTP verified, session auto-established');
 
     setStep('password');
     setLoading(false);
@@ -95,7 +94,13 @@ export default function ResetPasswordPage() {
     setMessage('');
     setToken(''); // limpia el código anterior
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim());
+    // Use signInWithOtp for resend too - must match the original send method
+    const { error } = await supabase.auth.signInWithOtp({
+      email: email.trim(),
+      options: {
+        shouldCreateUser: false,
+      },
+    });
 
     if (error) {
       setError(error.message);

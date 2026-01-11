@@ -27,8 +27,13 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     setError('');
 
-    // Pure OTP flow - no redirectTo needed
-    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email);
+    // PURE OTP FLOW - Use signInWithOtp for recovery, not resetPasswordForEmail
+    const { error: resetError } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: false, // Only allow existing users to reset
+      },
+    });
 
     if (resetError) {
       console.error(resetError);

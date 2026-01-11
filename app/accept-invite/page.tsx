@@ -34,7 +34,6 @@ function AcceptInviteForm() {
         }
 
         // The confirmation URL is a Supabase verify link with a token
-        // We need to exchange this for a session by calling it
         const url = new URL(confirmationUrl);
         const token = url.searchParams.get('token');
         const type = url.searchParams.get('type');
@@ -47,7 +46,8 @@ function AcceptInviteForm() {
           return;
         }
 
-        // Verify the invite token with Supabase
+        // PURE MAGIC LINK FLOW - Use verifyOtp with token_hash
+        // DO NOT call setSession manually - verifyOtp does it automatically
         console.log('[ACCEPT-INVITE] Verifying invite token...');
         const { data, error: verifyError } = await supabase.auth.verifyOtp({
           token_hash: token,
@@ -62,13 +62,9 @@ function AcceptInviteForm() {
         }
 
         console.log('[ACCEPT-INVITE] Invite verified! User:', data.user?.id);
+        console.log('[ACCEPT-INVITE] Session auto-established by verifyOtp');
 
-        // Set the session
-        if (data.session) {
-          await supabase.auth.setSession(data.session);
-        }
-
-        // Redirect to set-password page to configure their password
+        // Session is ALREADY set by verifyOtp - just redirect
         router.push('/set-password');
       } catch (err: any) {
         console.error('[ACCEPT-INVITE] Error processing invite:', err);

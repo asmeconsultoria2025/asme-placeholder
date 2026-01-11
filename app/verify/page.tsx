@@ -38,28 +38,21 @@ function VerifyForm() {
       return;
     }
 
-    // Use server route to bypass CORS
-    const res = await fetch('/api/auth/verify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, token: token.trim(), type: 'signup' }),
+    // PURE OTP FLOW - Verify directly without manual setSession
+    // verifyOtp automatically establishes the session
+    const { error: verifyError } = await supabase.auth.verifyOtp({
+      email,
+      token: token.trim(),
+      type: 'signup',
     });
 
-    const data = await res.json();
-
-    if (!res.ok) {
-      setError(data.error || 'Código inválido o expirado');
+    if (verifyError) {
+      setError(verifyError.message || 'Código inválido o expirado');
       setLoading(false);
       return;
     }
 
-    if (data.session) {
-      await supabase.auth.setSession({
-        access_token: data.session.access_token,
-        refresh_token: data.session.refresh_token,
-      });
-    }
-
+    // Session is ALREADY established by verifyOtp - just redirect
     setSuccess(true);
     setLoading(false);
     setTimeout(() => router.push('/dashboard'), 1500);

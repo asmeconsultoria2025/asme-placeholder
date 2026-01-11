@@ -38,34 +38,14 @@ function SetPasswordForm() {
         return;
       }
 
-      let accessToken = null;
-      let refreshToken = null;
-      let type = null;
+      // This page is reached AFTER OTP verification in reset-password flow
+      // OR after invite acceptance in accept-invite flow
+      // The session is ALREADY established by verifyOtp() - we just need to verify it exists
 
-      // First, try to extract from query parameters (standard recovery flow)
-      const searchParams = new URLSearchParams(window.location.search);
-      accessToken = searchParams.get('access_token');
-      refreshToken = searchParams.get('refresh_token');
-      type = searchParams.get('type');
+      const { data: { session } } = await supabase.auth.getSession();
 
-      // If not found, try hash fragment (PKCE flow)
-      if (!accessToken && window.location.hash) {
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        accessToken = hashParams.get('access_token');
-        refreshToken = hashParams.get('refresh_token');
-        type = hashParams.get('type');
-      }
-
-      if (accessToken && type === 'recovery') {
-        // Set the session with the recovery token
-        const { error: sessionError } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken || '',
-        });
-
-        if (sessionError) {
-          setError('El enlace ha expirado o es inválido');
-        }
+      if (!session) {
+        setError('No hay sesión activa. Por favor solicita un nuevo enlace de recuperación.');
       }
 
       setInitializing(false);
