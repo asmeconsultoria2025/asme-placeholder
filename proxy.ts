@@ -59,8 +59,36 @@ export default async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Allow reset-password and set-password page access without auth
-  if (request.nextUrl.pathname === '/reset-password' || request.nextUrl.pathname === '/set-password') {
+  // Public routes that don't require authentication
+  const publicRoutes = [
+    '/',
+    '/login',
+    '/signup',
+    '/verify',
+    '/forgot-password',
+    '/reset-password',
+    '/set-password',
+    '/accept-invite',
+  ]
+
+  const isPublicRoute = publicRoutes.some(route => request.nextUrl.pathname === route)
+
+  // Handle root path
+  if (request.nextUrl.pathname === '/') {
+    if (user) {
+      // Logged in users go to dashboard
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
+    // Non-logged in users stay on root (which should show signup/landing)
+    return response
+  }
+
+  // Allow public routes without auth
+  if (isPublicRoute) {
+    // If logged in and trying to access login/signup, redirect to dashboard
+    if (user && (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup')) {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
     return response
   }
 
@@ -78,19 +106,19 @@ export default async function proxy(request: NextRequest) {
     }
   }
 
-  // If logged in and trying to access login page (without error), redirect to dashboard
-  if (user && request.nextUrl.pathname === '/login' && !request.nextUrl.searchParams.get('error')) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
-  }
-
   return response
 }
 
 export const config = {
   matcher: [
-    '/dashboard/:path*',
-    '/login',
-    '/reset-password',
-    '/set-password',
+    /*
+     * Match all request paths except:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - api routes (CRITICAL - don't intercept /api routes)
+     * - public files (images, etc)
+     */
+    '/((?!_next/static|_next/image|favicon.ico|api|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
