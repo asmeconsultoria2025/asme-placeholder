@@ -38,26 +38,36 @@ function SetPasswordForm() {
         return;
       }
 
-      // Extract token from hash fragment
-      const hash = window.location.hash;
-      if (hash) {
-        const params = new URLSearchParams(hash.substring(1));
-        const accessToken = params.get('access_token');
-        const refreshToken = params.get('refresh_token');
-        const type = params.get('type');
+      let accessToken = null;
+      let refreshToken = null;
+      let type = null;
 
-        if (accessToken && type === 'recovery') {
-          // Set the session with the recovery token
-          const { error: sessionError } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken || '',
-          });
+      // First, try to extract from query parameters (standard recovery flow)
+      const searchParams = new URLSearchParams(window.location.search);
+      accessToken = searchParams.get('access_token');
+      refreshToken = searchParams.get('refresh_token');
+      type = searchParams.get('type');
 
-          if (sessionError) {
-            setError('El enlace ha expirado o es inválido');
-          }
+      // If not found, try hash fragment (PKCE flow)
+      if (!accessToken && window.location.hash) {
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        accessToken = hashParams.get('access_token');
+        refreshToken = hashParams.get('refresh_token');
+        type = hashParams.get('type');
+      }
+
+      if (accessToken && type === 'recovery') {
+        // Set the session with the recovery token
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken || '',
+        });
+
+        if (sessionError) {
+          setError('El enlace ha expirado o es inválido');
         }
       }
+
       setInitializing(false);
     };
 

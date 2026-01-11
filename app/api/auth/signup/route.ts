@@ -29,11 +29,11 @@ export async function POST(request: NextRequest) {
       await supabase.auth.admin.deleteUser(existingUser.id);
     }
 
-    // Create user with email already confirmed (skip OTP)
+    // Create user with email verification required (sends OTP)
     const { data, error } = await supabase.auth.admin.createUser({
       email,
       password,
-      email_confirm: true,
+      email_confirm: false,
       user_metadata: {
         name,
         is_admin: true,
@@ -45,10 +45,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       user: data.user,
-      requiresVerification: false
+      requiresVerification: true
     });
 
   } catch (error: any) {

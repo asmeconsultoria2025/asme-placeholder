@@ -68,10 +68,10 @@ export default function SignupPage() {
       return;
     }
 
-    // Redirect to login - account is ready
+    // Redirect to verify page - user needs to enter OTP
     setSuccess(true);
     setLoading(false);
-    setTimeout(() => router.push('/login'), 1500);
+    setTimeout(() => router.push(`/verify?email=${encodeURIComponent(email)}`), 1500);
   };
 
   return (
@@ -95,7 +95,7 @@ export default function SignupPage() {
               <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
               <div>
                 <p className="text-green-500 font-medium text-sm">Cuenta creada exitosamente</p>
-                <p className="text-gray-400 text-sm mt-1">Redirigiendo al login...</p>
+                <p className="text-gray-400 text-sm mt-1">Revisa tu correo. Redirigiendo a verificación...</p>
               </div>
             </div>
           ) : (

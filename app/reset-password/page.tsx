@@ -42,9 +42,8 @@ export default function ResetPasswordPage() {
     setError('');
     setMessage('');
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: 'https://asmeconsultoria.com/reset-password',
-    });
+    // Pure OTP flow - no redirectTo needed (user enters code manually)
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim());
 
     if (error) {
       setError(error.message);
