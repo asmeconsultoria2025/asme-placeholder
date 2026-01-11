@@ -19,7 +19,30 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Create user - email_confirm: false means Supabase sends OTP email
+    // Check if user already exists
+    const { data: existingUsers } = await supabase.auth.admin.listUsers();
+    const users = existingUsers?.users || [];
+    const existingUser = users.find((u: any) => u.email === email);
+    
+    if (existingUser) {
+      // If user exists but not confirmed, resend OTP
+      if (!existingUser.email_confirmed_at) {
+        // Generate new OTP by triggering signup again (this resends the email)
+        const anonSupabase = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+        await anonSupabase.auth.resend({
+          type: 'signup',
+          email,
+        });
+        return NextResponse.json({ 
+          success: true, 
+          message: 'Verification code resent',
+          requiresVerification: true
+        });
+      }
+      return NextResponse.json({ error: 'Este correo ya está registrado. Intenta iniciar sesión.' }, { status: 400 });
+    }
+
+    // Create new user - email_confirm: false means Supabase sends OTP email
     const { data, error } = await supabase.auth.admin.createUser({
       email,
       password,

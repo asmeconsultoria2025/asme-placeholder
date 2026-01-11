@@ -22,8 +22,10 @@ function VerifyForm() {
   const [email, setEmail] = useState(emailParam);
   const [token, setToken] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,6 +60,29 @@ function VerifyForm() {
     setSuccess(true);
     setLoading(false);
     setTimeout(() => router.push('/dashboard'), 1500);
+  };
+
+  const handleResend = async () => {
+    if (!email) {
+      setError('Ingresa tu correo electrónico');
+      return;
+    }
+    setResending(true);
+    setError('');
+    setResendSuccess(false);
+
+    const { error: resendError } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+    });
+
+    if (resendError) {
+      setError(resendError.message);
+    } else {
+      setResendSuccess(true);
+      setTimeout(() => setResendSuccess(false), 3000);
+    }
+    setResending(false);
   };
 
   return (
@@ -120,6 +145,13 @@ function VerifyForm() {
               </div>
             )}
 
+            {resendSuccess && (
+              <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 flex gap-2">
+                <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                <p className="text-sm text-green-500">Código reenviado. Revisa tu correo.</p>
+              </div>
+            )}
+
             <Button 
               type="submit" 
               className="w-full bg-red-500 hover:bg-red-600 text-white" 
@@ -127,6 +159,15 @@ function VerifyForm() {
             >
               {loading ? 'Verificando...' : 'Verificar Cuenta'}
             </Button>
+
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={resending || !email}
+              className="w-full text-center text-sm text-gray-400 hover:text-white disabled:opacity-50"
+            >
+              {resending ? 'Reenviando...' : '¿No recibiste el código? Reenviar'}
+            </button>
 
             <p className="text-center text-sm text-gray-400 mt-4">
               <a href="/signup" className="text-red-500 hover:underline">
