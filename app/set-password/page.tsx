@@ -80,8 +80,12 @@ function SetPasswordForm() {
       return;
     }
 
+    // Update password AND set is_admin flag for invited users
     const { error: updateError } = await supabase.auth.updateUser({
       password,
+      data: {
+        is_admin: true, // All invited users are admins
+      }
     });
 
     if (updateError) {
@@ -92,7 +96,8 @@ function SetPasswordForm() {
 
     setSuccess(true);
     setLoading(false);
-    setTimeout(() => router.push('/dashboard'), 1500);
+    // Hard redirect to force full page load with server auth
+    setTimeout(() => { window.location.href = '/dashboard'; }, 1500);
   };
 
   if (initializing) {

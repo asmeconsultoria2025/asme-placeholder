@@ -31,7 +31,7 @@ export default function AuthCallbackPage() {
 
           // Redirect based on type
           if (type === 'invite' || type === 'recovery') {
-            router.push('/set-password');
+            window.location.href = '/set-password';
             return;
           }
         }
@@ -41,9 +41,9 @@ export default function AuthCallbackPage() {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session) {
-        router.push('/dashboard');
+        window.location.href = '/dashboard';
       } else {
-        router.push('/login');
+        window.location.href = '/login';
       }
     };
 

@@ -23,7 +23,6 @@ function AcceptInviteForm() {
       try {
         console.log('[ACCEPT-INVITE] Starting invite processing');
 
-        // Get the confirmation_url parameter (it's URL-encoded)
         const confirmationUrl = searchParams.get('confirmation_url');
         console.log('[ACCEPT-INVITE] Confirmation URL:', confirmationUrl);
 
@@ -33,7 +32,6 @@ function AcceptInviteForm() {
           return;
         }
 
-        // The confirmation URL is a Supabase verify link with a token
         const url = new URL(confirmationUrl);
         const token = url.searchParams.get('token');
         const type = url.searchParams.get('type');
@@ -46,29 +44,39 @@ function AcceptInviteForm() {
           return;
         }
 
-        // PURE MAGIC LINK FLOW - Use verifyOtp with token_hash
-        // DO NOT call setSession manually - verifyOtp does it automatically
-        console.log('[ACCEPT-INVITE] Verifying invite token...');
-        const { data, error: verifyError } = await supabase.auth.verifyOtp({
-          token_hash: token,
-          type: 'invite',
+        // Use server-side route for proper cookie handling
+        console.log('[ACCEPT-INVITE] Calling server-side verification...');
+        const res = await fetch('/api/auth/accept-invite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token }),
         });
 
-        if (verifyError) {
-          console.log('[ACCEPT-INVITE] Verification error:', verifyError);
-          setError('El enlace ha expirado o es inválido. Por favor solicita una nueva invitación.');
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          console.log('[ACCEPT-INVITE] Server verification failed:', data.error);
+          setError(data.error || 'El enlace ha expirado o es inválido.');
           setProcessing(false);
           return;
         }
 
-        console.log('[ACCEPT-INVITE] Invite verified! User:', data.user?.id);
-        console.log('[ACCEPT-INVITE] Session auto-established by verifyOtp');
+        console.log('[ACCEPT-INVITE] Server verification succeeded! User:', data.user?.id);
 
-        // Session is ALREADY set by verifyOtp - just redirect
+        // Also set session in browser client for immediate use
+        if (data.session) {
+          await supabase.auth.setSession({
+            access_token: data.session.access_token,
+            refresh_token: data.session.refresh_token,
+          });
+        }
+
+        console.log('[ACCEPT-INVITE] Redirecting to set-password...');
+        // Use router.push for client-side navigation
         router.push('/set-password');
       } catch (err: any) {
         console.error('[ACCEPT-INVITE] Error processing invite:', err);
-        setError('Error al procesar la invitación. Verifica que el enlace sea correcto.');
+        setError('Error al procesar la invitación.');
         setProcessing(false);
       }
     };

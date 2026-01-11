@@ -34,9 +34,9 @@ export function AuthHashHandler() {
 
         // Redirect based on type
         if (type === 'invite' || type === 'recovery') {
-          router.push('/set-password');
+          window.location.href = '/set-password';
         } else {
-          router.push('/dashboard');
+          window.location.href = '/dashboard';
         }
       }
     };

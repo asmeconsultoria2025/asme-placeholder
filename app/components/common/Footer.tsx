@@ -79,6 +79,7 @@ export function Footer() {
                 <li>
                   <Link
                     href="/dashboard"
+                    prefetch={false}
                     className="text-sm text-gray-300 hover:text-red-500 transition-colors"
                   >
                     Acceso Administrativo

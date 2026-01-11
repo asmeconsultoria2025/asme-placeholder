@@ -48,10 +48,8 @@ export default function LoginPage() {
       refresh_token: data.session.refresh_token,
     });
 
-    router.push('/dashboard');
-    router.refresh();
-
-    setLoading(false);
+    // Hard redirect to force full page load with server auth
+    window.location.href = '/dashboard';
   };
 
   return (

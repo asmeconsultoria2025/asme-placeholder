@@ -55,7 +55,7 @@ function VerifyForm() {
     // Session is ALREADY established by verifyOtp - just redirect
     setSuccess(true);
     setLoading(false);
-    setTimeout(() => router.push('/dashboard'), 1500);
+    setTimeout(() => { window.location.href = '/dashboard'; }, 1500);
   };
 
   const handleResend = async () => {
