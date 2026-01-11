@@ -8,6 +8,9 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 export async function POST(request: NextRequest) {
   try {
     console.log('[SIGNUP] Starting signup request');
+    console.log('[SIGNUP] Supabase URL:', supabaseUrl);
+    console.log('[SIGNUP] Has Anon Key:', !!supabaseAnonKey);
+
     const { email, password, name } = await request.json();
     console.log('[SIGNUP] Request data:', { email, hasPassword: !!password, name });
 
@@ -16,25 +19,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    });
-
-    // Check if user already exists
-    const { data: existingUsers } = await supabase.auth.admin.listUsers();
-    const users = existingUsers?.users || [];
-    const existingUser = users.find((u: any) => u.email === email);
-    
-    if (existingUser) {
-      // Delete existing user and recreate fresh
-      await supabase.auth.admin.deleteUser(existingUser.id);
-    }
-
-    // Use standard signup flow (not admin.createUser) to trigger OTP
-    // First, create a client with anon key for user signup
+    // Use the anon client to do a proper signup (not admin API)
+    // This ensures OTP tokens are generated correctly
     const anonSupabase = createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         autoRefreshToken: false,
@@ -42,9 +28,8 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Use signUp instead of admin.createUser - this triggers OTP email
-    console.log('[SIGNUP] Calling signUp...');
-    const { data, error } = await anonSupabase.auth.signUp({
+    console.log('[SIGNUP] Signing up user with regular flow...');
+    const { data: signupData, error: signupError } = await anonSupabase.auth.signUp({
       email,
       password,
       options: {
@@ -52,20 +37,23 @@ export async function POST(request: NextRequest) {
           name,
           is_admin: true,
           created_at: new Date().toISOString()
-        }
+        },
+        emailRedirectTo: undefined, // No redirect, pure OTP
       }
     });
 
-    if (error) {
-      console.log('[SIGNUP] Error from signUp:', error);
-      return NextResponse.json({ error: error.message }, { status: 400 });
+    if (signupError) {
+      console.log('[SIGNUP] Signup error:', signupError);
+      return NextResponse.json({ error: signupError.message }, { status: 400 });
     }
 
-    console.log('[SIGNUP] Success! User created:', data.user?.id);
+    console.log('[SIGNUP] User created:', signupData.user?.id);
+    console.log('[SIGNUP] User confirmation status:', signupData.user?.email_confirmed_at ? 'confirmed' : 'pending');
+
     return NextResponse.json({
       success: true,
-      user: data.user,
-      requiresVerification: true
+      user: signupData.user,
+      requiresVerification: !signupData.user?.email_confirmed_at
     });
 
   } catch (error: any) {

@@ -21,8 +21,11 @@ function AcceptInviteForm() {
   useEffect(() => {
     const handleInvite = async () => {
       try {
-        // Get the confirmation_url parameter
+        console.log('[ACCEPT-INVITE] Starting invite processing');
+
+        // Get the confirmation_url parameter (it's URL-encoded)
         const confirmationUrl = searchParams.get('confirmation_url');
+        console.log('[ACCEPT-INVITE] Confirmation URL:', confirmationUrl);
 
         if (!confirmationUrl) {
           setError('Enlace de invitación inválido');
@@ -30,34 +33,45 @@ function AcceptInviteForm() {
           return;
         }
 
-        // Parse the confirmation URL to extract tokens
+        // The confirmation URL is a Supabase verify link with a token
+        // We need to exchange this for a session by calling it
         const url = new URL(confirmationUrl);
-        const accessToken = url.searchParams.get('access_token') || url.hash.match(/access_token=([^&]+)/)?.[1];
-        const refreshToken = url.searchParams.get('refresh_token') || url.hash.match(/refresh_token=([^&]+)/)?.[1];
-        const type = url.searchParams.get('type') || url.hash.match(/type=([^&]+)/)?.[1];
+        const token = url.searchParams.get('token');
+        const type = url.searchParams.get('type');
 
-        if (!accessToken) {
+        console.log('[ACCEPT-INVITE] Token:', token?.substring(0, 10) + '...', 'Type:', type);
+
+        if (!token || type !== 'invite') {
           setError('Enlace de invitación inválido o expirado');
           setProcessing(false);
           return;
         }
 
-        // Set the session with the invite token
-        const { error: sessionError } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken || '',
+        // Verify the invite token with Supabase
+        console.log('[ACCEPT-INVITE] Verifying invite token...');
+        const { data, error: verifyError } = await supabase.auth.verifyOtp({
+          token_hash: token,
+          type: 'invite',
         });
 
-        if (sessionError) {
+        if (verifyError) {
+          console.log('[ACCEPT-INVITE] Verification error:', verifyError);
           setError('El enlace ha expirado o es inválido. Por favor solicita una nueva invitación.');
           setProcessing(false);
           return;
         }
 
+        console.log('[ACCEPT-INVITE] Invite verified! User:', data.user?.id);
+
+        // Set the session
+        if (data.session) {
+          await supabase.auth.setSession(data.session);
+        }
+
         // Redirect to set-password page to configure their password
         router.push('/set-password');
       } catch (err: any) {
-        console.error('Error processing invite:', err);
+        console.error('[ACCEPT-INVITE] Error processing invite:', err);
         setError('Error al procesar la invitación. Verifica que el enlace sea correcto.');
         setProcessing(false);
       }
