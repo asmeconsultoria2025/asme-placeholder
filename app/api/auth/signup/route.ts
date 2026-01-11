@@ -19,11 +19,11 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Create user with admin API - bypasses CORS entirely
+    // Create user - email_confirm: false means Supabase sends OTP email
     const { data, error } = await supabase.auth.admin.createUser({
       email,
       password,
-      email_confirm: true,
+      email_confirm: false,
       user_metadata: {
         name,
         is_admin: true,
@@ -37,7 +37,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ 
       success: true, 
-      user: data.user 
+      user: data.user,
+      requiresVerification: true
     });
 
   } catch (error: any) {

@@ -68,31 +68,10 @@ export default function SignupPage() {
       return;
     }
 
-    // Auto-login after successful signup via server route
-    const loginRes = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
-
-    const loginData = await loginRes.json();
-
-    if (!loginRes.ok || !loginData.session) {
-      setError('Cuenta creada. Por favor inicia sesión manualmente.');
-      setLoading(false);
-      setTimeout(() => router.push('/login'), 2000);
-      return;
-    }
-
-    // Set session client-side
-    await supabase.auth.setSession({
-      access_token: loginData.session.access_token,
-      refresh_token: loginData.session.refresh_token,
-    });
-
+    // Redirect to verify page with email
     setSuccess(true);
     setLoading(false);
-    setTimeout(() => router.push('/dashboard'), 1000);
+    setTimeout(() => router.push(`/verify?email=${encodeURIComponent(email)}`), 1500);
   };
 
   return (
@@ -116,7 +95,7 @@ export default function SignupPage() {
               <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
               <div>
                 <p className="text-green-500 font-medium text-sm">Cuenta creada exitosamente</p>
-                <p className="text-gray-400 text-sm mt-1">Redirigiendo al dashboard...</p>
+                <p className="text-gray-400 text-sm mt-1">Te enviamos un código de verificación por correo...</p>
               </div>
             </div>
           ) : (
