@@ -7,9 +7,12 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('[SIGNUP] Starting signup request');
     const { email, password, name } = await request.json();
+    console.log('[SIGNUP] Request data:', { email, hasPassword: !!password, name });
 
     if (!email || !password) {
+      console.log('[SIGNUP] Missing email or password');
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
 
@@ -40,6 +43,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Use signUp instead of admin.createUser - this triggers OTP email
+    console.log('[SIGNUP] Calling signUp...');
     const { data, error } = await anonSupabase.auth.signUp({
       email,
       password,
@@ -53,9 +57,11 @@ export async function POST(request: NextRequest) {
     });
 
     if (error) {
+      console.log('[SIGNUP] Error from signUp:', error);
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
+    console.log('[SIGNUP] Success! User created:', data.user?.id);
     return NextResponse.json({
       success: true,
       user: data.user,
@@ -63,6 +69,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error: any) {
+    console.error('[SIGNUP] Caught exception:', error);
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }
