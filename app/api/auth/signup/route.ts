@@ -25,28 +25,15 @@ export async function POST(request: NextRequest) {
     const existingUser = users.find((u: any) => u.email === email);
     
     if (existingUser) {
-      // If user exists but not confirmed, resend OTP
-      if (!existingUser.email_confirmed_at) {
-        // Generate new OTP by triggering signup again (this resends the email)
-        const anonSupabase = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
-        await anonSupabase.auth.resend({
-          type: 'signup',
-          email,
-        });
-        return NextResponse.json({ 
-          success: true, 
-          message: 'Verification code resent',
-          requiresVerification: true
-        });
-      }
-      return NextResponse.json({ error: 'Este correo ya está registrado. Intenta iniciar sesión.' }, { status: 400 });
+      // Delete existing user and recreate fresh
+      await supabase.auth.admin.deleteUser(existingUser.id);
     }
 
-    // Create new user - email_confirm: false means Supabase sends OTP email
+    // Create user with email already confirmed (skip OTP)
     const { data, error } = await supabase.auth.admin.createUser({
       email,
       password,
-      email_confirm: false,
+      email_confirm: true,
       user_metadata: {
         name,
         is_admin: true,
@@ -61,7 +48,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ 
       success: true, 
       user: data.user,
-      requiresVerification: true
+      requiresVerification: false
     });
 
   } catch (error: any) {
