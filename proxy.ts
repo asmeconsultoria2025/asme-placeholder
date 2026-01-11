@@ -2,6 +2,11 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export default async function proxy(request: NextRequest) {
+  // CRITICAL: Never intercept API routes
+  if (request.nextUrl.pathname.startsWith('/api')) {
+    return NextResponse.next()
+  }
+
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -112,13 +117,17 @@ export default async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - api routes (CRITICAL - don't intercept /api routes)
-     * - public files (images, etc)
+     * Match specific paths only - explicitly exclude /api
+     * This is more reliable than negative lookahead
      */
-    '/((?!_next/static|_next/image|favicon.ico|api|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/',
+    '/login',
+    '/signup',
+    '/verify',
+    '/forgot-password',
+    '/reset-password',
+    '/set-password',
+    '/accept-invite',
+    '/dashboard/:path*',
   ],
 }
