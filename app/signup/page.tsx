@@ -53,34 +53,42 @@ export default function SignupPage() {
       return;
     }
 
-    const { data, error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          name,
-          is_admin: true,
-        },
-      },
+    // Use server-side API to bypass CORS
+    const res = await fetch('/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, name }),
     });
 
-    if (signUpError) {
-      setError(signUpError.message);
+    const data = await res.json();
+
+    if (!res.ok) {
+      setError(data.error || 'Error al crear la cuenta');
       setLoading(false);
       return;
     }
 
-    // Auto-login immediately after signup
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+    // Auto-login after successful signup via server route
+    const loginRes = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
     });
 
-    if (signInError) {
-      setError('Cuenta creada pero error al iniciar sesión. Intenta iniciar sesión manualmente.');
+    const loginData = await loginRes.json();
+
+    if (!loginRes.ok || !loginData.session) {
+      setError('Cuenta creada. Por favor inicia sesión manualmente.');
       setLoading(false);
+      setTimeout(() => router.push('/login'), 2000);
       return;
     }
+
+    // Set session client-side
+    await supabase.auth.setSession({
+      access_token: loginData.session.access_token,
+      refresh_token: loginData.session.refresh_token,
+    });
 
     setSuccess(true);
     setLoading(false);

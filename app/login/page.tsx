@@ -27,20 +27,27 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
 
-    // REAL AUTH NOW
-    const { data, error: signInError } =
-      await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+    // Server-side login to bypass CORS
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
 
-    if (signInError) {
-      setError('Correo o contraseña incorrectos');
+    const data = await res.json();
+
+    if (!res.ok || !data.session) {
+      setError(data.error || 'Correo o contraseña incorrectos');
       setLoading(false);
       return;
     }
 
-    // Successful Supabase login = session created = RLS works
+    // Set session client-side
+    await supabase.auth.setSession({
+      access_token: data.session.access_token,
+      refresh_token: data.session.refresh_token,
+    });
+
     router.push('/dashboard');
     router.refresh();
 
