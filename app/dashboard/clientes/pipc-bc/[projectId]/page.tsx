@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Download, Loader2, Save, Check } from 'lucide-react';
-import { getPIPCProject, generateAndDownloadPDF } from '../actions';
+import { getPIPCProject, generateAndDownloadPDF, addLegalFramework, addResourceInventory, addSignageList, addDrillRecord } from '../actions';
 import CompanyInfoSection from './sections/CompanyInfo';
 import OccupancySection from './sections/Occupancy';
 import UIFCSection from './sections/UIPC';
@@ -70,6 +70,46 @@ export default function PIPCEditorPage() {
   async function handleDataChange() {
     showSaveIndicator();
     await loadProject(); // Reload to show new items
+  }
+
+  async function handleLegalFramework() {
+    try {
+      await addLegalFramework(projectId);
+      showSaveIndicator();
+      await loadProject();
+    } catch (error) {
+      console.error('Error adding legal framework:', error);
+    }
+  }
+
+  async function handleInventory() {
+    try {
+      await addResourceInventory(projectId);
+      showSaveIndicator();
+      await loadProject();
+    } catch (error) {
+      console.error('Error adding inventory:', error);
+    }
+  }
+
+  async function handleSignage() {
+    try {
+      await addSignageList(projectId);
+      showSaveIndicator();
+      await loadProject();
+    } catch (error) {
+      console.error('Error adding signage:', error);
+    }
+  }
+
+  async function handleSimulacro() {
+    try {
+      await addDrillRecord(projectId);
+      showSaveIndicator();
+      await loadProject();
+    } catch (error) {
+      console.error('Error adding drill record:', error);
+    }
   }
 
   if (loading) {

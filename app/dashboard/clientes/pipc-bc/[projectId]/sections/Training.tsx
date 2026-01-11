@@ -44,6 +44,17 @@ export default function TrainingSection({ projectId, training, onSave }: Props) 
       return;
     }
 
+    // Validate date is before today
+    if (formData.fecha) {
+      const inputDate = new Date(formData.fecha);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (inputDate >= today) {
+        alert('La fecha debe ser anterior a hoy');
+        return;
+      }
+    }
+
     setAdding(true);
     try {
       startTransition(async () => {

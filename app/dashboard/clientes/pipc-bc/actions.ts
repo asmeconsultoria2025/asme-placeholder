@@ -142,7 +142,7 @@ export async function addRisk(projectId: string, data: any) {
   revalidatePath(`/dashboard/clientes/pipc-bc/${projectId}`);
 }
 
-export async function deleteRisk(riskId: string, projectId: string) {
+export async function deleteRisk(projectId: string, riskId: string) {
   const { error } = await supabase
     .from('pipc_risks')
     .delete()
@@ -155,6 +155,16 @@ export async function deleteRisk(riskId: string, projectId: string) {
 // ==================== TRAINING ====================
 
 export async function addTraining(projectId: string, data: any) {
+  // Validate date is before today to prevent 22007 errors
+  if (data.fecha) {
+    const inputDate = new Date(data.fecha);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (inputDate >= today) {
+      throw new Error('La fecha debe ser anterior a hoy');
+    }
+  }
+
   const { error } = await supabase
     .from('pipc_training')
     .insert([{ project_id: projectId, ...data }]);
@@ -168,6 +178,78 @@ export async function deleteTraining(trainingId: string, projectId: string) {
     .from('pipc_training')
     .delete()
     .eq('id', trainingId);
+
+  if (error) throw error;
+  revalidatePath(`/dashboard/clientes/pipc-bc/${projectId}`);
+}
+
+// ==================== STATIC DATA HELPERS ====================
+
+// Generate yesterday's date in ISO format (always valid)
+function getYesterdayISO(): string {
+  return new Date(Date.now() - 86400000).toISOString().split('T')[0];
+}
+
+export async function addLegalFramework(projectId: string) {
+  // Insert static legal framework data into company_info notes field
+  const { error } = await supabase
+    .from('pipc_company_info')
+    .upsert({
+      project_id: projectId,
+      marco_juridico: 'Ley General de Protección Civil, Ley de Protección Civil y Gestión Integral de Riesgos del Estado de Baja California, NOM-002-STPS-2010, NOM-026-STPS-2008, NOM-003-SEGOB-2011'
+    }, { onConflict: 'project_id' });
+
+  if (error) throw error;
+  revalidatePath(`/dashboard/clientes/pipc-bc/${projectId}`);
+}
+
+export async function addResourceInventory(projectId: string) {
+  // Add default risks as inventory indicators
+  const defaultResources = [
+    { tipo: 'Extintores ABC', categoria: 'interno', nivel: 'Bajo' },
+    { tipo: 'Botiquín primeros auxilios', categoria: 'interno', nivel: 'Bajo' },
+    { tipo: 'Señalización evacuación', categoria: 'interno', nivel: 'Bajo' },
+  ];
+
+  for (const resource of defaultResources) {
+    await supabase
+      .from('pipc_risks')
+      .insert([{ project_id: projectId, ...resource }]);
+  }
+
+  revalidatePath(`/dashboard/clientes/pipc-bc/${projectId}`);
+}
+
+export async function addSignageList(projectId: string) {
+  // Add signage-related risk entries
+  const signageItems = [
+    { tipo: 'Señales de salida', categoria: 'interno', nivel: 'Bajo' },
+    { tipo: 'Señales de ruta evacuación', categoria: 'interno', nivel: 'Bajo' },
+    { tipo: 'Señales de extintor', categoria: 'interno', nivel: 'Bajo' },
+    { tipo: 'Punto de reunión', categoria: 'externo', nivel: 'Bajo' },
+  ];
+
+  for (const item of signageItems) {
+    await supabase
+      .from('pipc_risks')
+      .insert([{ project_id: projectId, ...item }]);
+  }
+
+  revalidatePath(`/dashboard/clientes/pipc-bc/${projectId}`);
+}
+
+export async function addDrillRecord(projectId: string) {
+  // Add a training record for drill (simulacro)
+  const drillData = {
+    proyecto_id: projectId,
+    curso: 'Simulacro de evacuación',
+    fecha: getYesterdayISO(),
+    duracion: '30 minutos'
+  };
+
+  const { error } = await supabase
+    .from('pipc_training')
+    .insert([{ project_id: projectId, ...drillData }]);
 
   if (error) throw error;
   revalidatePath(`/dashboard/clientes/pipc-bc/${projectId}`);
@@ -224,4 +306,170 @@ export async function generateAndDownloadPDF(projectId: string) {
   
   // Return only the URL, no buffer
   return { pdfUrl: publicUrl };
+}
+
+// ==================== EVIDENCE ACTIONS ====================
+
+export interface EvidenceMetadata {
+  id: string;
+  project_id: string;
+  anexo: 'H' | 'I' | 'J' | 'K';
+  subsection: string;
+  title: string;
+  file_path: string;
+  file_type: string;
+  created_at: string;
+}
+
+export async function uploadEvidence(
+  projectId: string,
+  anexo: 'H' | 'I' | 'J' | 'K',
+  subsection: string,
+  title: string,
+  file: File
+): Promise<EvidenceMetadata> {
+  // Validate inputs
+  if (!projectId || !anexo || !subsection || !title || !file) {
+    throw new Error('Missing required fields for evidence upload');
+  }
+
+  // Validate anexo
+  if (!['H', 'I', 'J', 'K'].includes(anexo)) {
+    throw new Error('Invalid anexo. Must be H, I, J, or K');
+  }
+
+  // Generate unique file path: {project_id}/{anexo}/{timestamp}_{filename}
+  const timestamp = Date.now();
+  const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const filePath = `${projectId}/${anexo}/${timestamp}_${sanitizedFileName}`;
+
+  // Convert File to ArrayBuffer for upload
+  const arrayBuffer = await file.arrayBuffer();
+  const buffer = new Uint8Array(arrayBuffer);
+
+  // Upload to Supabase Storage
+  const { error: uploadError } = await supabase.storage
+    .from('pipc-evidence')
+    .upload(filePath, buffer, {
+      contentType: file.type,
+      upsert: false
+    });
+
+  if (uploadError) {
+    throw new Error(`Failed to upload file: ${uploadError.message}`);
+  }
+
+  // Insert metadata into database
+  const { data: metadata, error: dbError } = await supabase
+    .from('pipc_evidence')
+    .insert([{
+      project_id: projectId,
+      anexo,
+      subsection,
+      title,
+      file_path: filePath,
+      file_type: file.type
+    }])
+    .select()
+    .single();
+
+  if (dbError) {
+    // Cleanup: delete uploaded file if metadata insert fails
+    await supabase.storage.from('pipc-evidence').remove([filePath]);
+    throw new Error(`Failed to save metadata: ${dbError.message}`);
+  }
+
+  revalidatePath(`/dashboard/clientes/pipc-bc/${projectId}`);
+  return metadata;
+}
+
+export async function listEvidence(
+  projectId: string,
+  anexo?: 'H' | 'I' | 'J' | 'K'
+): Promise<EvidenceMetadata[]> {
+  let query = supabase
+    .from('pipc_evidence')
+    .select('*')
+    .eq('project_id', projectId)
+    .order('subsection', { ascending: true })
+    .order('created_at', { ascending: true });
+
+  if (anexo) {
+    query = query.eq('anexo', anexo);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    throw new Error(`Failed to list evidence: ${error.message}`);
+  }
+
+  return data || [];
+}
+
+export async function getEvidenceUrl(filePath: string): Promise<string> {
+  const { data } = supabase.storage
+    .from('pipc-evidence')
+    .getPublicUrl(filePath);
+
+  return data.publicUrl;
+}
+
+export async function deleteEvidence(
+  projectId: string,
+  evidenceId: string
+): Promise<void> {
+  // Get the evidence record first to get the file path
+  const { data: evidence, error: fetchError } = await supabase
+    .from('pipc_evidence')
+    .select('file_path')
+    .eq('id', evidenceId)
+    .eq('project_id', projectId)
+    .single();
+
+  if (fetchError) {
+    throw new Error(`Evidence not found: ${fetchError.message}`);
+  }
+
+  // Delete from storage
+  const { error: storageError } = await supabase.storage
+    .from('pipc-evidence')
+    .remove([evidence.file_path]);
+
+  if (storageError) {
+    throw new Error(`Failed to delete file: ${storageError.message}`);
+  }
+
+  // Delete metadata from database
+  const { error: dbError } = await supabase
+    .from('pipc_evidence')
+    .delete()
+    .eq('id', evidenceId);
+
+  if (dbError) {
+    throw new Error(`Failed to delete metadata: ${dbError.message}`);
+  }
+
+  revalidatePath(`/dashboard/clientes/pipc-bc/${projectId}`);
+}
+
+export async function getEvidenceByAnexo(
+  projectId: string
+): Promise<Record<string, EvidenceMetadata[]>> {
+  const allEvidence = await listEvidence(projectId);
+  
+  const grouped: Record<string, EvidenceMetadata[]> = {
+    H: [],
+    I: [],
+    J: [],
+    K: []
+  };
+
+  for (const item of allEvidence) {
+    if (grouped[item.anexo]) {
+      grouped[item.anexo].push(item);
+    }
+  }
+
+  return grouped;
 }

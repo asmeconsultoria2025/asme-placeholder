@@ -6,10 +6,10 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, role = 'admin' } = await request.json();
+    const { email, password, name, role = 'admin' } = await request.json();
 
-    if (!email) {
-      return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+    if (!email || !password) {
+      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey, {
@@ -19,26 +19,28 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Create user with admin API - sends invite email automatically
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://asmeconsultoria.com';
-    const { data, error } = await supabase.auth.admin.inviteUserByEmail(email, {
-      redirectTo: `${baseUrl}/set-password`,
-      data: {
-        role: role,
+    // Create user directly with admin API (no email confirmation)
+    const { data, error } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: {
+        name,
+        role,
         is_admin: true,
-        invited_at: new Date().toISOString()
+        created_at: new Date().toISOString()
       }
     });
 
     if (error) {
-      console.error('Invite error:', error);
+      console.error('Create user error:', error);
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
     return NextResponse.json({ 
       success: true, 
       user: data.user,
-      message: 'Invite sent successfully' 
+      message: 'User created successfully' 
     });
 
   } catch (error: any) {

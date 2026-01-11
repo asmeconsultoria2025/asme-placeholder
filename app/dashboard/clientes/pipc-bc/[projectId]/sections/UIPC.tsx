@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Shield } from 'lucide-react';
+import { Shield, Save, Loader2 } from 'lucide-react';
 import { upsertUIPC } from '../../actions';
 
 interface Props {
@@ -25,6 +25,7 @@ export default function UIFCSection({ projectId, data, onSave }: Props) {
   });
 
   const [saveTimeout, setSaveTimeout] = useState<NodeJS.Timeout | null>(null);
+    const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (saveTimeout) clearTimeout(saveTimeout);
@@ -43,11 +44,27 @@ export default function UIFCSection({ projectId, data, onSave }: Props) {
   }, [formData]);
 
   async function handleSave() {
+    setSaving(true);
     try {
       await upsertUIPC(projectId, formData);
       onSave();
     } catch (error) {
       console.error('Error saving UIPC:', error);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleManualSave() {
+    setSaving(true);
+    try {
+      await upsertUIPC(projectId, formData);
+      onSave();
+    } catch (error) {
+      console.error('Error saving UIPC:', error);
+      alert('Error al guardar datos de la UIPC');
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -58,11 +75,21 @@ export default function UIFCSection({ projectId, data, onSave }: Props) {
   return (
     <div className="bg-white rounded-lg shadow-sm border">
       <div className="border-b px-6 py-4">
-        <div className="flex items-center gap-3">
-          <Shield className="text-blue-600" size={24} />
-          <h2 className="text-xl font-semibold text-gray-900">
-            Unidad Interna de Protección Civil (UIPC)
-          </h2>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Shield className="text-blue-600" size={24} />
+            <h2 className="text-xl font-semibold text-gray-900">
+              Unidad Interna de Protección Civil (UIPC)
+            </h2>
+          </div>
+          <button
+            onClick={handleManualSave}
+            disabled={saving}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          >
+            {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+            Guardar
+          </button>
         </div>
       </div>
 
