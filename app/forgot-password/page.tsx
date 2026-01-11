@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/app/components/ui/card';
@@ -15,6 +16,7 @@ export default function ForgotPasswordPage() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -25,20 +27,17 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     setError('');
 
-    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://asmeconsultoria.com'}/set-password`,
-    });
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email);
 
     if (resetError) {
       console.error(resetError);
-      setError('Error sending reset email.');
+      setError('Error al enviar el correo.');
       setLoading(false);
       return;
     }
 
     setSuccess(true);
     setLoading(false);
-    setEmail('');
   };
 
   return (
@@ -50,9 +49,9 @@ export default function ForgotPasswordPage() {
 
       <Card className="w-full max-w-md shadow-lg border border-border/60">
         <CardHeader>
-          <CardTitle className="text-center text-xl text-red-500">Recover Password</CardTitle>
+          <CardTitle className="text-center text-xl text-red-500">Recuperar Contraseña</CardTitle>
           <p className="text-center text-sm text-gray-400 mt-2">
-            Enter your email to receive a reset link.
+            Ingresa tu correo para recibir un código de recuperación.
           </p>
         </CardHeader>
         <CardContent>
@@ -61,28 +60,35 @@ export default function ForgotPasswordPage() {
               <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 flex items-start gap-3">
                 <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5" />
                 <div>
-                  <p className="text-green-500 font-medium text-sm">Email sent!</p>
-                  <p className="text-gray-400 text-sm mt-1">Check your inbox.</p>
+                  <p className="text-green-500 font-medium text-sm">Código enviado</p>
+                  <p className="text-gray-400 text-sm mt-1">Revisa tu correo para el código de 6 dígitos.</p>
                 </div>
               </div>
 
+              <Button 
+                onClick={() => router.push(`/reset-password?email=${encodeURIComponent(email)}`)}
+                className="w-full bg-red-500 text-white hover:bg-red-600"
+              >
+                Ingresar Código
+              </Button>
+
               <Link href="/login">
-                <Button className="w-full bg-white text-black hover:bg-gray-100">
+                <Button variant="ghost" className="w-full text-white hover:bg-white/10">
                   <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to login
+                  Volver al login
                 </Button>
               </Link>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
-              <label className="block text-sm font-medium text-white mb-2">Email</label>
+              <label className="block text-sm font-medium text-white mb-2">Correo Electrónico</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your@email.com"
+                  placeholder="tu@email.com"
                   className="pl-10 bg-gray-800/50 border-gray-700 text-white"
                   required
                   disabled={loading}
@@ -96,13 +102,13 @@ export default function ForgotPasswordPage() {
               )}
 
               <Button type="submit" className="w-full bg-red-500 text-white hover:bg-red-600" disabled={loading}>
-                {loading ? 'Sending...' : 'Send recovery link'}
+                {loading ? 'Enviando...' : 'Enviar Código'}
               </Button>
 
               <Link href="/login">
                 <Button type="button" variant="ghost" className="w-full text-white hover:bg-white/10">
                   <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to login
+                  Volver al login
                 </Button>
               </Link>
             </form>

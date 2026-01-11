@@ -38,14 +38,17 @@ function VerifyForm() {
       return;
     }
 
-    const { data, error: verifyError } = await supabase.auth.verifyOtp({
-      email,
-      token: token.trim(),
-      type: 'signup',
+    // Use server route to bypass CORS
+    const res = await fetch('/api/auth/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, token: token.trim(), type: 'signup' }),
     });
 
-    if (verifyError) {
-      setError(verifyError.message || 'Código inválido o expirado');
+    const data = await res.json();
+
+    if (!res.ok) {
+      setError(data.error || 'Código inválido o expirado');
       setLoading(false);
       return;
     }

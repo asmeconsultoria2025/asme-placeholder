@@ -22,6 +22,7 @@ function SetPasswordForm() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [initializing, setInitializing] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
@@ -29,10 +30,39 @@ function SetPasswordForm() {
   const urlError = searchParams.get('error_description');
 
   useEffect(() => {
-    if (urlError) {
-      setError(decodeURIComponent(urlError.replace(/\+/g, ' ')));
-    }
-  }, [urlError]);
+    const handleRecovery = async () => {
+      // Check for error first
+      if (urlError) {
+        setError(decodeURIComponent(urlError.replace(/\+/g, ' ')));
+        setInitializing(false);
+        return;
+      }
+
+      // Extract token from hash fragment
+      const hash = window.location.hash;
+      if (hash) {
+        const params = new URLSearchParams(hash.substring(1));
+        const accessToken = params.get('access_token');
+        const refreshToken = params.get('refresh_token');
+        const type = params.get('type');
+
+        if (accessToken && type === 'recovery') {
+          // Set the session with the recovery token
+          const { error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken || '',
+          });
+
+          if (sessionError) {
+            setError('El enlace ha expirado o es inválido');
+          }
+        }
+      }
+      setInitializing(false);
+    };
+
+    handleRecovery();
+  }, [urlError, supabase.auth]);
 
   const validatePassword = (pwd: string): string | null => {
     if (pwd.length < 8) return 'La contraseña debe tener al menos 8 caracteres';
@@ -75,7 +105,15 @@ function SetPasswordForm() {
     setTimeout(() => router.push('/dashboard'), 1500);
   };
 
-  if (urlError) {
+  if (initializing) {
+    return (
+      <Card className="w-full max-w-md border border-border/60">
+        <CardContent className="p-8 text-center text-white">Verificando enlace...</CardContent>
+      </Card>
+    );
+  }
+
+  if (error && !password) {
     return (
       <Card className="w-full max-w-md border border-border/60">
         <CardHeader>
