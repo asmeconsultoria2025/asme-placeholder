@@ -408,6 +408,9 @@ const [currentView, setCurrentView] = useState<"month" | "week" | "day">("month"
     return allAppointments.filter((a) => {
       const key = (a.service_key || "").trim();
 
+      // Always show audiencias in ALL views
+      if (key === "audiencia") return true;
+
       if (sourceFilter === "asme_abogados") {
         if (serviceFilter === "all") {
           if (LEGAL_SERVICE_KEYS.includes(key)) return true;
@@ -833,6 +836,58 @@ const [currentView, setCurrentView] = useState<"month" | "week" | "day">("month"
           />
         </div>
       </Card>
+
+      {/* PRÓXIMAS AUDIENCIAS - Only show for ASME Abogados filter */}
+      {sourceFilter === "asme_abogados" && (
+        <Card className="mt-6 p-4">
+          <h2 className="text-lg font-semibold mb-3">Próximas Audiencias</h2>
+          {(() => {
+            const now = new Date();
+            const upcomingAudiencias = normalizedAudiencias
+              .filter((a) => {
+                const audDate = new Date(`${a.assigned_date}T${a.assigned_time || '00:00'}:00`);
+                return audDate >= now;
+              })
+              .sort((a, b) => {
+                const dateA = new Date(`${a.assigned_date}T${a.assigned_time || '00:00'}:00`);
+                const dateB = new Date(`${b.assigned_date}T${b.assigned_time || '00:00'}:00`);
+                return dateA.getTime() - dateB.getTime();
+              })
+              .slice(0, 10);
+
+            if (upcomingAudiencias.length === 0) {
+              return <p className="text-sm text-muted-foreground">No hay audiencias próximas.</p>;
+            }
+
+            return (
+              <div className="space-y-3">
+                {upcomingAudiencias.map((a) => (
+                  <div
+                    key={a.id}
+                    onClick={() => openViewPanel(a)}
+                    className="border rounded-md p-3 bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium">
+                          {a.assigned_date} · {a.assigned_time}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {a.service_label}
+                          {a.admin_notes && ` · ${a.admin_notes}`}
+                        </p>
+                      </div>
+                      <span className="text-xs bg-slate-600 text-white px-2 py-1 rounded">
+                        {a.status}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+        </Card>
+      )}
 
       {/* LIST BELOW CALENDAR */}
       <div className="mt-6">
