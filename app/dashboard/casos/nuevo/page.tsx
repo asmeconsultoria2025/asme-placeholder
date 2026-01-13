@@ -204,7 +204,7 @@ export default function NuevoCasoPage() {
                 <SelectItem value="abierto">Abierto</SelectItem>
                 <SelectItem value="en_proceso">En proceso</SelectItem>
                 <SelectItem value="pendiente_docs">Pendiente docs</SelectItem>
-                <SelectItem value="cerrado">Cerrado</SelectItem>
+                <SelectItem value="cerrado">Suspendido</SelectItem>
               </SelectContent>
             </Select>
           </div>

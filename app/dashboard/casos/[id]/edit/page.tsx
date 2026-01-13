@@ -320,7 +320,7 @@ export default function EditCasePage() {
               <option value="abierto">Abierto</option>
               <option value="en_proceso">En proceso</option>
               <option value="pendiente_docs">Pendiente de documentos</option>
-              <option value="cerrado">Cerrado</option>
+              <option value="cerrado">Suspendido</option>
             </select>
           </div>
 

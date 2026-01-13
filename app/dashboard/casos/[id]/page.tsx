@@ -67,7 +67,7 @@ function statusLabel(status: CaseStatus) {
     case 'abierto': return 'Abierto';
     case 'en_proceso': return 'En proceso';
     case 'pendiente_docs': return 'Pendiente docs';
-    case 'cerrado': return 'Cerrado';
+    case 'cerrado': return 'Suspendido';
     default: return status;
   }
 }

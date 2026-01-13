@@ -72,7 +72,7 @@ function statusLabel(status: CaseStatus) {
     case 'pendiente_docs':
       return 'Pendiente de documentos';
     case 'cerrado':
-      return 'Cerrado';
+      return 'Suspendido';
     default:
       return status;
   }
@@ -370,7 +370,7 @@ export default function CasosPage() {
             Casos / Expedientes
           </h1>
           <p className="text-sm text-muted-foreground">
-            Vista interna de todos los casos activos, pendientes y cerrados.
+            Vista interna de todos los casos activos, pendientes y suspendidos.
           </p>
           {errorMsg && <p className="mt-1 text-xs text-red-500">{errorMsg}</p>}
         </div>
@@ -452,7 +452,7 @@ export default function CasosPage() {
             size="sm"
             onClick={() => setStatusFilter('cerrado')}
           >
-            Cerrados
+            Suspendido
           </Button>
         </div>
       </Card>
