@@ -1,37 +1,38 @@
 // lib/uploadLegalBlogMedia.ts
-// Upload helper for legal blog images and media files
+// Upload helper for legal blog images and media files via DigitalOcean Spaces
 
-import { createBrowserClient } from '@supabase/ssr';
+"use client";
 
+/**
+ * Upload a file to DigitalOcean Spaces via our API route
+ * @param bucketName - The folder to upload to: 'legal-blog-images' or 'legal-blog-media'
+ * @param file - The file to upload
+ * @returns The public URL of the uploaded file, or null if upload fails
+ */
 export async function uploadToLegalBucket(
   bucketName: 'legal-blog-images' | 'legal-blog-media',
   file: File
 ): Promise<string | null> {
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('folder', bucketName);
 
-  const timestamp = Date.now();
-  const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-  const fileName = `${timestamp}-${sanitizedName}`;
-
-  const { data, error } = await supabase.storage
-    .from(bucketName)
-    .upload(fileName, file, {
-      cacheControl: '3600',
-      upsert: false,
+    const response = await fetch('/api/upload/spaces', {
+      method: 'POST',
+      body: formData,
     });
 
-  if (error) {
+    const result = await response.json();
+
+    if (!response.ok) {
+      console.error(`Error uploading to ${bucketName}:`, result.error);
+      return null;
+    }
+
+    return result.url;
+  } catch (error) {
     console.error(`Error uploading to ${bucketName}:`, error);
     return null;
   }
-
-  // Get public URL
-  const { data: urlData } = supabase.storage
-    .from(bucketName)
-    .getPublicUrl(data.path);
-
-  return urlData.publicUrl;
 }

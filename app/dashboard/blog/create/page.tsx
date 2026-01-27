@@ -164,23 +164,28 @@ export default function CreateBlogPage() {
     const timestamp = Date.now();
     const slug = `${baseSlug}-${timestamp}`;
 
-    const { error } = await supabase.from('blogs').insert({
-      title: form.title,
-      content: form.content,
-      category: form.category,
-      type: form.type,
-      featured_image: featuredImageUrl,
-      media_url: mediaUrl,
-      media_type: form.mediaFile?.type || null,
-      slug,
-      archived: false,
+    // Use API route to bypass RLS
+    const response = await fetch('/api/blogs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: form.title,
+        content: form.content,
+        category: form.category,
+        type: form.type,
+        featured_image: featuredImageUrl,
+        media_url: mediaUrl,
+        media_type: form.mediaFile?.type || null,
+        slug,
+      }),
     });
 
+    const result = await response.json();
     setLoading(false);
 
-    if (error) {
-      console.error(error);
-      alert(`Error al guardar: ${error.message}`);
+    if (!response.ok) {
+      console.error(result.error);
+      alert(`Error al guardar: ${result.error}`);
       return;
     }
 
@@ -251,11 +256,18 @@ export default function CreateBlogPage() {
         
         {/* LEFT SIDE */}
         <div className="md:col-span-2 space-y-6 min-w-0">
-          <Card className="border-border/40 shadow-[0_4px_18px_rgba(0,0,0,0.07)] min-w-0">
+          <Card className="border bg-white">
             <CardHeader>
-              <CardTitle className="font-headline text-asmeBlue">
-                Crear Nuevo Post
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="font-headline text-asmeBlue">
+                  Crear Nuevo Post
+                </CardTitle>
+                <Button variant="outline" size="sm" asChild>
+                  <Link href="/dashboard/blog">
+                    Volver al Blog
+                  </Link>
+                </Button>
+              </div>
             </CardHeader>
 
             <CardContent className="space-y-6 min-w-0">
@@ -302,7 +314,7 @@ export default function CreateBlogPage() {
 
                 {/* PREVIEW */}
                 <div
-                  className="mt-5 p-6 border rounded-xl bg-white shadow-sm 
+                  className="mt-5 p-6 border rounded-xl bg-white 
                   prose prose-neutral max-w-none
                   prose-headings:font-headline"
                 >
@@ -347,7 +359,7 @@ export default function CreateBlogPage() {
 
         {/* RIGHT SIDE ----------------------------------------- */}
         <div className="space-y-6 min-w-0">
-          <Card className="border-border/40 shadow-[0_4px_18px_rgba(0,0,0,0.07)]">
+          <Card className="border bg-white">
             <CardHeader>
               <CardTitle className="font-headline text-asmeBlue">
                 Detalles
@@ -485,7 +497,7 @@ export default function CreateBlogPage() {
       {/* FULLSCREEN EDITOR */}
       {isFullscreen && (
         <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center">
-          <div className="relative w-full h-full max-w-7xl mx-auto bg-white shadow-2xl flex flex-col">
+          <div className="relative w-full h-full max-w-7xl mx-auto bg-white flex flex-col">
             <div className="flex items-center justify-between px-4 py-3 border-b bg-white">
               <span className="font-semibold text-sm">Editor en pantalla completa</span>
               <Button size="sm" variant="outline" onClick={() => setIsFullscreen(false)}>

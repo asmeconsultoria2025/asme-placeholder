@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef, type TouchEvent } from "react";
 import Link from "next/link";
 import { createBrowserClient } from '@supabase/ssr';
+import { deleteFromSpaces } from "@/app/lib/deleteFromSpaces";
 
 import { Button } from "@/app/components/ui/button";
 import {
@@ -169,18 +170,12 @@ export default function BlogManagementPage() {
   const deletePost = async (post: any) => {
     if (!confirm("¿Eliminar este post permanentemente?")) return;
 
+    // Delete files from DigitalOcean Spaces
     if (post.featured_image) {
-      const file = post.featured_image.split("/").pop();
-      if (file) {
-        await supabase.storage.from("blog-images").remove([file]);
-      }
+      await deleteFromSpaces(post.featured_image);
     }
-
     if (post.media_url) {
-      const file = post.media_url.split("/").pop();
-      if (file) {
-        await supabase.storage.from("blog-media").remove([file]);
-      }
+      await deleteFromSpaces(post.media_url);
     }
 
     await supabase.from("blogs").delete().eq("id", post.id);
@@ -214,19 +209,13 @@ export default function BlogManagementPage() {
 
     const toDelete = posts.filter((p) => selectedIds.includes(p.id));
 
+    // Delete files from DigitalOcean Spaces
     for (const post of toDelete) {
       if (post.featured_image) {
-        const file = post.featured_image.split("/").pop();
-        if (file) {
-          await supabase.storage.from("blog-images").remove([file]);
-        }
+        await deleteFromSpaces(post.featured_image);
       }
-
       if (post.media_url) {
-        const file = post.media_url.split("/").pop();
-        if (file) {
-          await supabase.storage.from("blog-media").remove([file]);
-        }
+        await deleteFromSpaces(post.media_url);
       }
     }
 
@@ -292,7 +281,7 @@ export default function BlogManagementPage() {
         </Button>
       </div>
 
-      <Card className="w-full">
+      <Card className="w-full bg-white">
         <CardHeader>
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>

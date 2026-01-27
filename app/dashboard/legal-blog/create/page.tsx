@@ -156,23 +156,28 @@ export default function CreateLegalBlogPage() {
     const timestamp = Date.now();
     const slug = `${baseSlug}-${timestamp}`;
 
-    const { error } = await supabase.from('legal_blogs').insert({
-      title: form.title,
-      content: form.content,
-      category: form.category,
-      type: form.type,
-      featured_image: featuredImageUrl,
-      media_url: mediaUrl,
-      media_type: form.mediaFile?.type || null,
-      slug,
-      archived: false,
+    // Use API route to bypass RLS
+    const response = await fetch('/api/legal-blogs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: form.title,
+        content: form.content,
+        category: form.category,
+        type: form.type,
+        featured_image: featuredImageUrl,
+        media_url: mediaUrl,
+        media_type: form.mediaFile?.type || null,
+        slug,
+      }),
     });
 
+    const result = await response.json();
     setLoading(false);
 
-    if (error) {
-      console.error(error);
-      alert(`Error al guardar: ${error.message}`);
+    if (!response.ok) {
+      console.error(result.error);
+      alert(`Error al guardar: ${result.error}`);
       return;
     }
 

@@ -31,7 +31,6 @@ export default function DashboardClientLayout({ children }: { children: ReactNod
           backgroundSize: "300px",
         }}
       />
-
       {/* DESKTOP SIDEBAR */}
       <div
         className={`hidden md:block transition-all duration-300 ${
@@ -86,9 +85,6 @@ export default function DashboardClientLayout({ children }: { children: ReactNod
         </main>
       </div>
 
-      <div
-        className="pointer-events-none absolute bottom-0 left-0 w-full h-[180px] bg-gradient-to-b from-transparent via-white/10 to-white/20"
-      />
       <Toaster richColors position="top-right" />
     </div>
   );

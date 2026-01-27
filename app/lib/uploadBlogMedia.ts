@@ -1,29 +1,27 @@
 "use client";
 
-import { createBrowserClient } from '@supabase/ssr';
+/**
+ * Upload a file to DigitalOcean Spaces via our API route
+ * @param bucket - The folder to upload to: 'blog-images' or 'blog-media'
+ * @param file - The file to upload
+ * @returns The public URL of the uploaded file
+ */
+export async function uploadToBucket(bucket: string, file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('folder', bucket);
 
-export async function uploadToBucket(bucket: string, file: File) {
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const response = await fetch('/api/upload/spaces', {
+    method: 'POST',
+    body: formData,
+  });
 
-  const fileExt = file.name.split(".").pop();
-  const fileName = `${Date.now()}.${fileExt}`;
-  const filePath = `${fileName}`;
+  const result = await response.json();
 
-  const { error: uploadError } = await supabase.storage
-    .from(bucket)
-    .upload(filePath, file);
-
-  if (uploadError) {
-    console.error(uploadError);
-    throw new Error("Error uploading file");
+  if (!response.ok) {
+    console.error('Upload error:', result.error);
+    throw new Error(result.error || 'Error uploading file');
   }
 
-  const { data } = supabase.storage
-    .from(bucket)
-    .getPublicUrl(filePath);
-
-  return data.publicUrl;
+  return result.url;
 }
