@@ -51,7 +51,7 @@ export default function BlogPage() {
                 : p.type === 'audio'
                 ? 'Audio'
                 : 'Artículo',
-            media: p.type === 'articulo' ? p.featured_image : p.media_url,
+            media: p.featured_image,
           }))
         );
       }
