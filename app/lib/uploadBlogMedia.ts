@@ -1,27 +1,36 @@
 "use client";
 
 /**
- * Upload a file to DigitalOcean Spaces via our API route
- * @param bucket - The folder to upload to: 'blog-images' or 'blog-media'
- * @param file - The file to upload
- * @returns The public URL of the uploaded file
+ * Upload a file to DigitalOcean Spaces via presigned URL (direct browser upload).
+ * This bypasses Vercel's 4.5MB body size limit.
  */
 export async function uploadToBucket(bucket: string, file: File): Promise<string> {
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('folder', bucket);
-
-  const response = await fetch('/api/upload/spaces', {
+  // Step 1: Get presigned URL from our API
+  const res = await fetch('/api/upload/spaces', {
     method: 'POST',
-    body: formData,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      fileName: file.name,
+      contentType: file.type,
+      folder: bucket,
+    }),
   });
 
-  const result = await response.json();
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to get upload URL');
 
-  if (!response.ok) {
-    console.error('Upload error:', result.error);
-    throw new Error(result.error || 'Error uploading file');
-  }
+  // Step 2: Upload directly to DO Spaces using presigned URL
+  const upload = await fetch(data.presignedUrl, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': file.type,
+      'x-amz-acl': 'public-read',
+      'Cache-Control': 'max-age=31536000',
+    },
+    body: file,
+  });
 
-  return result.url;
+  if (!upload.ok) throw new Error('Failed to upload file to storage');
+
+  return data.publicUrl;
 }
